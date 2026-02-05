@@ -11,3 +11,9 @@ F.i. count of requests, CPU usage, how many requests per second
 
 **What are tracings and spans:** Tracking the journey of a single request as it flows through multiple services in a distributed system. They show the complete path and timing of operations across different components.
 A trace consists of **spans**, while each span is an operation with start and end time, f.i. a database query or an API call.
+
+**Push vs Pull:** 
+- Push is when the Applications activly sent their data to a monitoring system, the App decides when to send
+- Pull is when the monitoring system actively requests data from applications, often in intervals. The monitoring system in controling the timing
+
+**Service Discovery:** Automatic detection of services and their network location. F.i. in Kubernetes services constantly start, stop, move, scale. Maintaining manually a list of IP addresses and ports would become impossible. Instead of telling Prometheus each target we tell Prometheus to f.i. discover all Pods and Prometheus will ask the Kubernetes API for the pods, services, resources in general.
