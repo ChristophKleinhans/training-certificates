@@ -17,3 +17,16 @@ A trace consists of **spans**, while each span is an operation with start and en
 - Pull is when the monitoring system actively requests data from applications, often in intervals. The monitoring system in controling the timing
 
 **Service Discovery:** Automatic detection of services and their network location. F.i. in Kubernetes services constantly start, stop, move, scale. Maintaining manually a list of IP addresses and ports would become impossible. Instead of telling Prometheus each target we tell Prometheus to f.i. discover all Pods and Prometheus will ask the Kubernetes API for the pods, services, resources in general.
+
+**SLO:** Service Level Objective (SLO) are the definition of what level of performance or availability we promise to maintain.
+**SLI:** Service Level Indecator (SLI) is the metric we measure, f.i. request success, latency, etc.
+**SLA:** Service Level Agreement (SLA) is the contract with consequences if SLOs aren't met
+
+## Prometheus Fundamentals
+
+**System Architecture**
+
+<img width="681" height="421" alt="image" src="https://github.com/user-attachments/assets/335bd178-07ad-4d72-a8ae-20fb66759fe5" />
+
+Continue
+
