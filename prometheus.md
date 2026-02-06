@@ -54,6 +54,8 @@ scrape_configs:
       - targets: ['localhost:9090']
 ```
 
+Keep in mind, that the state of the system is scraped in this case in exactly 15 second intervals, when a peak is happening inbetween this 15 second interval, it will not be seen. It is always a snapshot of the system.
+
 **Prometheus Limitations**
 Prometheus is
 - NOT FOR LOGS (Loki/Splunk for logs)
