@@ -107,3 +107,17 @@ request_duration_seconds_count 305
 while `# HELP` is a description and the `# TYPE` is the metric type (counter, gauge, histogram, summary).
 
 The HTTP content type is: `text/plain; version=0.0.4` (A missing version value will lead to a fall-back to the most recent text format version.)
+
+
+## PromQL
+
+**Selecting Data:**
+
+*Example:* We want to return all timeseries for the metric name `http_requests_total`
+*Solution:* `http_requests_total`
+
+*Example:* Retunr all timeseries for the metric `http_requests_total` and the filter by label `method=GET` 
+*Solution:* `http_requests_total{method=GET}`
+
+
+
