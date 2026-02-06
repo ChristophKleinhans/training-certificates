@@ -30,6 +30,7 @@ A trace consists of **spans**, while each span is an operation with start and en
 
 - *Prometheus Server:*: Scrapes and stores the time-series data
 - *Pushgateway:* Used for ephemeral and short-living jobs, which dont live long enough to get scraped. These can expose their metrics by pushing them to the Pushgateway
+- *Jobs:* Prometheus Jobs are logical groupings of scrape targets that share the same purpose and configuration.
 - *Exporters:* They help us exporting EXISTING metrics from a system as Prometheus metrics. Mostly used for systems where a direct instrumentalization is not feasible, f.i. HAProxy or Linux Sys Stats
 - *Alermanager:* Simply handles the Alerts which are sent by the Prometheus Server. The Alertmanager takes care of dedublicating, grouping and routing
 
@@ -37,12 +38,18 @@ A trace consists of **spans**, while each span is an operation with start and en
 **Configuration and Scraping**
 
 - *Configuration:* Prometheus is configured using command-line flags for immutable parameters (such as storage locations, amount of data to keep on disk and in memory, etc.) and a configuration file which describes everything related to scraping, jobs and which rule file to load. Prometheus is able to reload its configuration at runtime.
-In the configuration file there is a `scrape_config` section where we can specify a set of targets. 
-Example YAML:
+Example of a simple configuration including one job:
 ```yaml
-# The job name assigned to scraped metrics by default.
-job_name: <job_name>
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
 
-# How frequently to scrape targets from this job.
-[ scrape_interval: <duration> | default = <global_config.scrape_interval> ]
+rule_files:
+  # - "first.rules"
+  # - "second.rules"
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
 ```
