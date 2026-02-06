@@ -136,8 +136,8 @@ The HTTP content type is: `text/plain; version=0.0.4` (A missing version value w
 *Example:* Calculate the `rabbitmq_queue_messages` rate of change (value change in seconds) within the last 10 minutes.
 *Solution:* deriv(rabbitmq_queue_messages[10m])
 
-[!NOTE]
-the deriv is only appliable on gauge
+> [!NOTE]  
+> Highlights information that users should take into account, even when skimming.
 
 
 
