@@ -80,6 +80,27 @@ While the Cardinality is the number of time series. Each Metric which differs in
 
 **Exposition Format**
 
-- 
+Metrics can be exposed to Prometheus using a simple text-based exposition format. All the client libraries implement this for us. This text-base format is line oriented and lines are seperated by the line feed character `\n`.
+When prometheus scrapes `myapp:8080/metrics` it gets plain text:
+```
+# HELP http_requests_total Total HTTP requests
+# TYPE http_requests_total counter
+http_requests_total{method="GET",status="200"} 1543
+http_requests_total{method="POST",status="200"} 421
+http_requests_total{method="GET",status="404"} 23
 
+# HELP memory_usage_bytes Current memory usage
+# TYPE memory_usage_bytes gauge
+memory_usage_bytes 524288000
+
+# HELP request_duration_seconds Request duration
+# TYPE request_duration_seconds histogram
+request_duration_seconds_bucket{le="0.1"} 100
+request_duration_seconds_bucket{le="0.5"} 250
+request_duration_seconds_bucket{le="1.0"} 300
+request_duration_seconds_bucket{le="+Inf"} 305
+request_duration_seconds_sum 145.3
+request_duration_seconds_count 305
+```
+while `# HELP` is a description and the `# TYPE` is the metric type (counter, gauge, histogram, summary).
 
