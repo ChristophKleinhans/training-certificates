@@ -77,3 +77,9 @@ While the Cardinality is the number of time series. Each Metric which differs in
 => `job` and `instance` (target address) is automatically labeled
 
 - *Labels:* Are key-value pairs. Labels beginning with two underscores are reserved. Empty values in the labels are treated as if the label is not present.
+
+**Exposition Format**
+
+- 
+
+
