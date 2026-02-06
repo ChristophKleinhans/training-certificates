@@ -28,8 +28,12 @@ A trace consists of **spans**, while each span is an operation with start and en
 
 <img width="681" height="421" alt="image" src="https://github.com/user-attachments/assets/335bd178-07ad-4d72-a8ae-20fb66759fe5" />
 
-- **Prometheus Server:**: Scrapes and stores the time-series data
-- **Pushgateway:** Used for ephemeral and short-living jobs, which dont live long enough to get scraped. These can expose their metrics by pushing them to the Pushgateway
-- **Exporters:** They help us exporting EXISTING metrics from a system as Prometheus metrics. Mostly used for systems where a direct instrumentalization is not feasible, f.i. HAProxy or Linux Sys Stats
-- **Alermanager:** Simply handles the Alerts which are sent by the Prometheus Server. The Alertmanager takes care of dedublicating, grouping and routing 
+- *Prometheus Server:*: Scrapes and stores the time-series data
+- *Pushgateway:* Used for ephemeral and short-living jobs, which dont live long enough to get scraped. These can expose their metrics by pushing them to the Pushgateway
+- *Exporters:* They help us exporting EXISTING metrics from a system as Prometheus metrics. Mostly used for systems where a direct instrumentalization is not feasible, f.i. HAProxy or Linux Sys Stats
+- *Alermanager:* Simply handles the Alerts which are sent by the Prometheus Server. The Alertmanager takes care of dedublicating, grouping and routing
+
+
+**Configuration and Scraping**
+
 
