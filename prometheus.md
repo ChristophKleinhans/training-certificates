@@ -53,3 +53,25 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 ```
+
+**Prometheus Limitations**
+Prometheus is
+- NOT FOR LOGS (Loki/Splunk for logs)
+- NOT FOR EVENTS/TRACES (jaeger or zipkin for traces)
+- pull-based means it can miss data between scrapes
+- not suitable for billing or exact counts
+- No built-in authentication/authorization
+- No HA, single node
+- No event-driven alerting, alerts are evaluated on intervals, not instantly
+
+**Data Model and Labels:** 
+
+- *Data Model:* Every metric is a timeseries. A timestamp and a value. The values are indentified by a metric name and labels. Structured like this:
+```
+<metric_name>{<label_name>="<label_value>", ...} value timestamp
+
+http_requests_total{method="GET", status="200", endpoint="/api"} 1547
+```
+While the Cardinality is the number of time series. Each Metric which differs in the name or label gets its own timeseries. So the Cardinality can reach millions (high cardinality) and is a performance problem.
+=> We need to stick to Label Best Practices
+=> `job` and `instance` (target address) is automatically labeled
