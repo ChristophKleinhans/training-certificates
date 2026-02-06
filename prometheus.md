@@ -116,8 +116,26 @@ The HTTP content type is: `text/plain; version=0.0.4` (A missing version value w
 *Example:* We want to return all timeseries for the metric name `http_requests_total`
 *Solution:* `http_requests_total`
 
-*Example:* Retunr all timeseries for the metric `http_requests_total` and the filter by label `method=GET` 
-*Solution:* `http_requests_total{method=GET}`
+*Example:* Return all timeseries for the metric `http_requests_total` and the filter by label `method=GET` 
+*Solution:* `http_requests_total{method="GET"}`
+
+*Example:* Return all timeseries for the metric `http_requests_total` and the filter by label `method=GET` and `status=200` 
+*Solution:* `http_requests_total{method="GET", status="200"}`
+
+**Rates and Derivates**
+
+*Example:* Calculate the rate (change of the value per second) of the `http_requests_total` for the last 5 minutes
+*Solution:* `rate(http_requests_total[5m])`
+
+*Example:* Calculate the rate (change of the value per second) of the last two datapoints in a timewindow of 5 minutes of the `http_requests_total`
+*Solution:* `irate(http_requests_total[5m])`
+
+*Example:* Calculate the increase of the `http_requests_total` within the timerange of 2 hours
+*Solution:* `increase(http_requests_total[2h])`
+
+*Example:* Calculate the `rabbitmq_queue_messages` rate of change (value change in seconds) within the last 10 minutes.
+*Solution:* deriv(rabbitmq_queue_messages[10m])
+
 
 
 
