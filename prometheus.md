@@ -104,3 +104,4 @@ request_duration_seconds_count 305
 ```
 while `# HELP` is a description and the `# TYPE` is the metric type (counter, gauge, histogram, summary).
 
+The HTTP content type is: `text/plain; version=0.0.4` (A missing version value will lead to a fall-back to the most recent text format version.)
