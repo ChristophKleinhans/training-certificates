@@ -66,7 +66,7 @@ Prometheus is
 
 **Data Model and Labels:** 
 
-- *Data Model:* Every metric is a timeseries. A timestamp and a value. The values are indentified by a metric name and labels. Structured like this:
+- *Data Model:* Every metric is a timeseries. A timestamp and a value. The values are indentified by a metric name and labels (key-value pairs). Structured like this:
 ```
 <metric_name>{<label_name>="<label_value>", ...} value timestamp
 
@@ -75,3 +75,5 @@ http_requests_total{method="GET", status="200", endpoint="/api"} 1547
 While the Cardinality is the number of time series. Each Metric which differs in the name or label gets its own timeseries. So the Cardinality can reach millions (high cardinality) and is a performance problem.
 => We need to stick to Label Best Practices
 => `job` and `instance` (target address) is automatically labeled
+
+- *Labels:* Are key-value pairs. Labels beginning with two underscores are reserved. Empty values in the labels are treated as if the label is not present.
