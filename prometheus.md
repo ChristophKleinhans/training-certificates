@@ -137,7 +137,7 @@ The HTTP content type is: `text/plain; version=0.0.4` (A missing version value w
 *Solution:* deriv(rabbitmq_queue_messages[10m])
 
 > [!NOTE]  
-> Highlights information that users should take into account, even when skimming.
+> the deriv is mainly used on gauge metrics, while rate, irate and increase mainly on count metrics.
 
 
 
