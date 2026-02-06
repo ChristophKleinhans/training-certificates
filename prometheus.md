@@ -38,8 +38,8 @@ A trace consists of **spans**, while each span is an operation with start and en
 
 - *Configuration:* Prometheus is configured using command-line flags for immutable parameters (such as storage locations, amount of data to keep on disk and in memory, etc.) and a configuration file which describes everything related to scraping, jobs and which rule file to load. Prometheus is able to reload its configuration at runtime.
 In the configuration file there is a `scrape_config` section where we can specify a set of targets. 
-Example:
-```json
+Example YAML:
+```yaml
 # The job name assigned to scraped metrics by default.
 job_name: <job_name>
 
