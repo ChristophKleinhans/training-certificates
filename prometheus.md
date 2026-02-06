@@ -137,7 +137,7 @@ The HTTP content type is: `text/plain; version=0.0.4` (A missing version value w
 *Solution:* deriv(rabbitmq_queue_messages[10m])
 
 !!! info
-  the deriv is only appliable on gauge
+    the deriv is only appliable on gauge
 
 
 
