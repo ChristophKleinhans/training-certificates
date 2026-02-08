@@ -274,3 +274,12 @@ rate(errors_total[5m]) / rate(requests_total[5m]) * 100
 ```
 
 Priority order: `^` > `*/%` > `+-` > comparison > `and unless` > `or`
+
+**Histograms**
+
+Histograms tracks the distribution of values by counting observations in predefined buckets. F.i. we have buckets defind using `le` (less than or equal) like this f.i. http_request_duration_seconds_bucket{le="0.1"} .
+
+**NEEDS TO BE FINISHED**
+
+
+
