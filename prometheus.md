@@ -171,10 +171,106 @@ Using the `@` modifier
 
 **Binary Operators**
 
-- Arithmetic Operators: 
+*Arithmetic Operators:*
+```
 +   addition
 -   subtraction
 *   multiplication
 /   division
 %   modulo
 ^   power
+```
+
+Examples:
+```
+# Scale bytes to megabytes
+memory_bytes / 1024 / 1024
+
+# Calculate percentage
+(used_memory / total_memory) * 100
+
+# Combine metrics
+requests_success + requests_failed
+```
+
+*Comparison Operators:*
+```
+==  equal
+!=  not equal
+>   greater than
+<   less than
+>=  greater or equal
+<=  less or equal
+```
+
+Returns 1 (true) or filters time series:
+```
+# Filter: only show where CPU > 80
+cpu_usage_percent > 80
+
+# Boolean result - return 1 if true or drops series if fase
+temperature_celsius > 90
+```
+
+*Logical Operators (for boolean values):*
+```
+and   intersection
+or    union
+unless  complement (exclude)
+```
+
+Examples:
+```
+# Will be written like this: (cpu_usage_percent > 80) and (memory_usage_percent > 90)
+# Both conditions must be true
+cpu_high and memory_high
+
+# Either condition
+disk_alert or network_alert
+
+# Exclude: all instances except these
+up unless up{job="maintenance"}
+```
+
+**Vector Matching:**
+
+When operating on two vectors, Prometheus matches by labels:
+
+One-to-one matching (default):
+```
+metric1 + metric2
+```
+Matches time series with identical labels.
+
+**Ignoring labels:**
+```
+metric1 + ignoring(instance) metric2
+```
+Matches while ignoring specific labels.
+
+**On specific labels:**
+```
+metric1 + on(job, method) metric2
+```
+Matches only on specified labels.
+
+Many-to-one / one-to-many:
+```
+metric1 / on(job) group_left metric2
+```
+- `group_left` - left side has more series
+- `group_right` - right side has more series
+
+Common Patterns:
+```
+# CPU percentage
+100 - (avg(irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+
+# Error rate
+rate(errors_total[5m]) / rate(requests_total[5m]) * 100
+
+# Filter and alert
+(up == 0) and on(job) (alert_enabled == 1)
+```
+
+Priority order: `^` > `*/%` > `+-` > comparison > `and unless` > `or`
