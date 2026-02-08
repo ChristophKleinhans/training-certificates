@@ -168,3 +168,13 @@ Using the `@` modifier
 - `sum(http_requests_total) @ start()` at the beginning of time range
 - `sum(http_requests_total) @ end()` at the end of the time range
 - `sum(http_requests_total) @ (time() - 3600)` one hour ago
+
+**Binary Operators**
+
+- Arithmetic Operators: 
++   addition
+-   subtraction
+*   multiplication
+/   division
+%   modulo
+^   power
