@@ -139,7 +139,32 @@ The HTTP content type is: `text/plain; version=0.0.4` (A missing version value w
 > [!NOTE]  
 > the deriv is mainly used on gauge metrics, while rate, irate and increase mainly on count metrics.
 
+**Agregation over time**
 
+Lets us apply functions across a time range for each time series and return a single value
+- avg_over_time(cpu_usage_percent[5m]) returns the average CPU over the last 5 minutes
+- max_over_time(response_time_seconds[1h]) and min_over_time(disk_free_bytes[24h]) gives us the peak max/min over time
+- count_over_time()
+- stddev_over_time() or stdvar_over_time() gives us the variability
+- quantile_over_time(), f.i. quantile_over_time(0.95, response_time_seconds[5m]) gives us the P95 latency over the 5 minute time window
 
+**Aggregation over dimensions**
 
+Instead of aggregating over time, we aggregate across different time series at a SINGLE POINT of time, which is the most recent value.
 
+As example without label preservation:
+- `sum(http_requests_total)`, `avg(cpu_usage_percent)`, `max(memory_usage_bytes)`, `min(disk_free_bytes)` adds all the time series together, removes all labels. Here f.i. all the HTTP requests or the load of all servers, etc.
+
+Aggregation WITH label preservation:
+
+Use the `by` or `without` syntax
+- `sum(http_requests_total) by (status)` groups by status code and sums everything else
+- `sum(http_requests_total) without (instance)` removes the instance label but keep everything else
+
+**Aggregation at a specific point of time**
+
+Using the `@` modifier
+- `sum(http_requests_total) @ 1704067200` using the Unix timestamp
+- `sum(http_requests_total) @ start()` at the beginning of time range
+- `sum(http_requests_total) @ end()` at the end of the time range
+- `sum(http_requests_total) @ (time() - 3600)` one hour ago
