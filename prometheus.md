@@ -282,4 +282,6 @@ Histograms tracks the distribution of values by counting observations in predefi
 **NEEDS TO BE FINISHED**
 
 
+**Timestamp Metrics**
 
+see section "Aggregation at a specific point of time"
