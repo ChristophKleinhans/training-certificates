@@ -290,3 +290,28 @@ see section "Aggregation at a specific point of time"
 ## Instrumentation and Exporters
 
 **Client Libraries:** 
+
+The client libraries are intended to be in the users application to instrument the application.
+
+Example for the python client library and counter method:
+
+```python
+from prometheus_client import Counter, Histogram, Gauge
+import time
+
+# Define metrics
+requests_total = Counter('app_requests_total', 'Total requests', ['method', 'endpoint'])
+
+# Use in your app
+def handle_request(method, endpoint):
+    requests_total.labels(method='GET', endpoint='/api/users').inc()
+    
+    with request_duration.time():
+        # ... process request ...
+        pass
+    
+    active_users.set(get_user_count())
+```
+
+The Counter method is normally used like this `Counter('<namespace>_<name>_<unit>_total', '<help text and description>', <List of label names>)`
+
