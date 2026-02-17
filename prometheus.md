@@ -316,4 +316,12 @@ def handle_request(method, endpoint):
 The Counter method is normally used like this `Counter('<namespace>_<name>_<unit>_total', '<help text and description>', <List of label names>)`
 
 
+**Exporters**
 
+There are a number of libraries and servers which help in exporting existing metrics from third-party systems as Prometheus metrics. This is useful for cases where it is not feasible to instrument a given system with Prometheus metrics directly (for example, HAProxy or Linux system stats)
+
+## Structuring and naming metrics
+
+Common is `<namespace>_<name>_<unit>_<suffix>` 
+- Counters always end with a `_total` suffix
+- Always use base units, not multiples, like `node_memory_available_bytes` , no megabytes or similar
