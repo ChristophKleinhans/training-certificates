@@ -336,6 +336,31 @@ Primary tool used for dashboarding is Grafana, which has a native prometheus int
 - Create a dashboard by writing a PromQL query and choose a visualization type
 
 
+**Configure Alerting rules**
+
+Alerting rules are written in YAML files. F.i.:
+```yaml
+groups:
+  - name: example_alerts
+    interval: 30s  # How often to evaluate rules (default: global evaluation_interval)
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m])) 
+          / 
+          sum(rate(http_requests_total[5m])) 
+          > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+```
+
+- `for` is optional and is a "Duration threshold". For how long condition must be true before firing
+
 
 
 
