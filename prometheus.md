@@ -289,7 +289,7 @@ see section "Aggregation at a specific point of time"
 
 ## Instrumentation and Exporters
 
-**Client Libraries:** 
+**Client Libraries and Instrumentation:** 
 
 The client libraries are intended to be in the users application to instrument the application.
 
@@ -320,8 +320,22 @@ The Counter method is normally used like this `Counter('<namespace>_<name>_<unit
 
 There are a number of libraries and servers which help in exporting existing metrics from third-party systems as Prometheus metrics. This is useful for cases where it is not feasible to instrument a given system with Prometheus metrics directly (for example, HAProxy or Linux system stats)
 
-## Structuring and naming metrics
+**Structuring and naming metrics**
 
 Common is `<namespace>_<name>_<unit>_<suffix>` 
 - Counters always end with a `_total` suffix
 - Always use base units, not multiples, like `node_memory_available_bytes` , no megabytes or similar
+
+
+## Alerting and Dashboarding
+
+**Dashboarding Basics**
+
+Primary tool used for dashboarding is Grafana, which has a native prometheus integration.
+- Setup Prometheus as data source
+- Create a dashboard by writing a PromQL query and choose a visualization type
+
+
+
+
+
