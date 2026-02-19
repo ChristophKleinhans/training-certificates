@@ -369,3 +369,7 @@ groups: # This is NOT the grouping in alertmanager
 - *Inhibition*:  Suppressing notifications for certain alerts if certain other alerts are already firing. F.i. an alert is firing that informs that an entire cluster is not reachable. Alertmanager can be configured to mute all other alerts concerning this cluster if that particular alert is firing.
 - *Silences*: Mute alerts for a given time
 
+**Alerting basics (when, what, and why)**
+
+- *Why*: Ideally detect problems before users notice them and notify the engineers. Also SLO, Capacity, etc. which the end-user not necesseraly recognizes, needs to be addresses early
+- *The four golden signals*: Alert Latency, Errors, Saturation, Traffic  
