@@ -340,7 +340,7 @@ Primary tool used for dashboarding is Grafana, which has a native prometheus int
 
 Alerting rules are written in YAML files. F.i.:
 ```yaml
-groups:
+groups: # This is NOT the grouping in alertmanager
   - name: example_alerts
     interval: 30s  # How often to evaluate rules (default: global evaluation_interval)
     rules:
@@ -362,5 +362,10 @@ groups:
 - `for` is optional and is a "Duration threshold". For how long condition must be true before firing
 
 
+**Alertmanager**
 
+- The Alertmanager handles alerts sent by client applications such as the Prometheus server. It takes care of deduplicating, grouping, and routing them to the correct receiver integration such as email, PagerDuty, or OpsGenie. It also takes care of silencing and inhibition of alerts.
+- *Grouping*: Categorizes of similar nature into a single notification, so when as example a DB is not reachable anymore many alerts will be fired by many services which depend on the DB
+- *Inhibition*:  Suppressing notifications for certain alerts if certain other alerts are already firing. F.i. an alert is firing that informs that an entire cluster is not reachable. Alertmanager can be configured to mute all other alerts concerning this cluster if that particular alert is firing.
+- *Silences*: Mute alerts for a given time
 
