@@ -22,6 +22,6 @@ Are common names for different kinds of operations and data. They are one of the
 - Resources —> service.name, service.version, host.name, cloud.provider, k8s.pod.name
 
 - Stability Levels:
-   - Stable —> production-ready, won't change in breaking ways.
-   - Experimental —> may change; use with caution
-   - Deprecated —> being phased out
+   - *Stable* —> production-ready, won't change in breaking ways.
+   - *Experimental* —> may change; use with caution
+   - *Deprecated* —> being phased out
