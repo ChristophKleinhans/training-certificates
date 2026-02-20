@@ -359,7 +359,7 @@ groups: # This is NOT the grouping in alertmanager
           description: "Error rate is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
 ```
 
-- `for` is optional and is a "Duration threshold". For how long condition must be true before firing
+- `for` is optional and is a "Duration threshold". For how long condition must be true before firing. F.i. the CPU must be >80% `for 10m`
 
 
 **Alertmanager**
@@ -372,4 +372,8 @@ groups: # This is NOT the grouping in alertmanager
 **Alerting basics (when, what, and why)**
 
 - *Why*: Ideally detect problems before users notice them and notify the engineers. Also SLO, Capacity, etc. which the end-user not necesseraly recognizes, needs to be addresses early
-- *The four golden signals*: Alert Latency, Errors, Saturation, Traffic  
+- *What*: Alert what matters, f.i. *The four golden signals*: Alert the metrics Latency, Errors, Saturation, Traffic . The *RED method for services* is alerting Rate (f.i. request volume drop), Errors, duration (latency increase) . The *USE method for resources* is utilization, Saturation and Errors .
+- *When*: Three severity levels:
+  1. Critical: User-facing service down, data loss, security breach, SLO breach
+  2. Warning: Degregaded performance, Approaching capacity limits, non-critical errors increasing
+  3. Info: Informational events, like successfull deployment
