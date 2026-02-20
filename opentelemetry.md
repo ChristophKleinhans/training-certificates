@@ -14,5 +14,9 @@ Telemetry data are `traces`, `metrics`, `logs`, `baggage`
 Are common names for different kinds of operations and data. They are one of the most important concepts in OpenTelemetry. Semantic Conventions define a standardized set of names and values for telemetry attributes (metadata) attached to spans, metrics, and logs. They ensure that different teams, libraries, and tools all "speak the same language" when describing telemetry data.
 *Example*: Instead of one developer calling an attribute `http.url` and another calling it `request.url`, Semantic Conventions say: "For HTTP, you must call it `url.full`." This makes data portable and interoperable across the ecosystem.
  
-
-- 
+- HTTP —> http.request.method, http.response.status_code, url.full, server.address
+- Databases —> db.system, db.name, db.statement, db.operation, db.stored_procedure.name
+- Messaging —> messaging.system, messaging.destination.name, messaging.operation
+- RPC —> rpc.system, rpc.service, rpc.method
+- Exceptions —> exception.type, exception.message, exception.stacktrace
+- Resources —> service.name, service.version, host.name, cloud.provider, k8s.pod.name
