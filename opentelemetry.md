@@ -47,5 +47,8 @@ For a system to be observable, it must be instrumented. The code from the system
 
 1. *Code-based*: Use the OTEL APIs and SDKs to get telemetry from the applications directly.
 2. *Zero-code*: When we cannot modify the application where we want to get the telemetry from. It provides telemetry data from the libraries we use. We can think about it lile "what's happending at the edges of the application".
+
+<img width="556" height="385" alt="image" src="https://github.com/user-attachments/assets/205687ca-c57b-48d1-9061-881e34ced063" />
+
 (3.) There are more ways to get telemetry data but the both methods above are the main approaches.
 
