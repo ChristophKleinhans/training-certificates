@@ -39,4 +39,13 @@ Are common names for different kinds of operations and data. They are one of the
  ```
 
 - Semantic Conventions are defined by the OTel specification, not by individual SDKs
- 
+
+
+ **Instrumentation**
+
+For a system to be observable, it must be instrumented. The code from the system's components must emit signals (traces, metrics, logs). There are two ways to do that in OTEL, but both ways can also be used simultaneously:
+
+1. *Code-based*: Use the OTEL APIs and SDKs to get telemetry from the applications directly.
+2. *Zero-code*: When we cannot modify the application where we want to get the telemetry from. It provides telemetry data from the libraries we use. We can think about it lile "what's happending at the edges of the application".
+(3.) There are more ways to get telemetry data but the both methods above are the main approaches.
+
