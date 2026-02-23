@@ -30,8 +30,8 @@ Are common names for different kinds of operations and data. They are one of the
    - Resource attributes describe what is producing the telemetry (e.g., service.name, host.id)
    - Span attributes describe what happened during an operation (e.g., http.request.method)
    - Metric attributes (dimensions) describe how to slice/aggregate metrics
- ```json
- http.request.method = "GET"
+ ```yaml
+ http.request.method  = "GET"
  url.full             = "https://example.com/api/users"
  server.address       = "example.com"
  server.port          = 443
