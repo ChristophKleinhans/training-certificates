@@ -24,3 +24,13 @@ the actual state differs from the desired state which is defined in git. F.i. so
 Its the loop which does automatically correct the actual state to match the desired state. Its pull based (not push-based, like a CI pipeline pushes to cluster). The GitOps Agent, which has cluster access, pulls the desired state from git.
 - ArgoCD (3 minutes) and Flux (1 minute) are polling git in 1 to 3 minutes periods to checks for new commits. 
 - The most GitOps agents do also support event driven notification using webhook.
+
+
+### GitOps Managed Software System
+
+Its a complete set of components that form a system where git is the single source of truth. There are three main components:
+
+1. State Store (Git repository)
+2. The reconciliation engine (GitOps agent) - continously comparing and correcting
+3. Runtime Environment - the live system which is being managed
+
