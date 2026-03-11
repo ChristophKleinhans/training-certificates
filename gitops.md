@@ -5,3 +5,17 @@
 ### Continuous
 
 The system will always keep attempting to reach the desired states, even after failures. It DOES NOT mean "instantaneous" or "real-time". The reconcilation loop runs constantly in the background. The agent observes the actual state and compares it with the desired state stored in Git. Is there a drift, it corrects it.
+
+### Declarative Description
+
+Imperative would be describing of HOW to get to the desired state. In the declarative description, all we do is to tell WHAT the result should look like.
+
+### Desired State
+
+What should the system look like. Git is the single source of truth. We control the state by changing what is written in the repo.
+
+### State Drift
+
+the actual state differs from the desired state which is defined in git. F.i. someone did a `kubectl delete pod/...` . The agents will continuously watch for drifts and correct it automaticall. It is important to have alerts, so in a case that something is deleted and created again, we will be alerted, otherwise the agent will simply create again and does not care if there is maybe a data loss.
+
+
