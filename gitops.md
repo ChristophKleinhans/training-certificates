@@ -51,3 +51,15 @@ Gives us visibility into the state of the system. The feedback loop answers:
 - Did reconciliation succeed or fail
 
 In ArgoCD/Flux it would be *sync and health status*
+
+### Rollback
+
+The commit history in Git allows rollback to a previous commit.
+Dont use `git reset ...` because it rewrites history and removes commits. Instead use:
+```bash
+git revert abc1234
+# or
+git checkout ghi9012 -- deployment.yaml
+```
+
+
