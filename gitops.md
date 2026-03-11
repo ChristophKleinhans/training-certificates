@@ -34,3 +34,10 @@ Its a complete set of components that form a system where git is the single sour
 2. The reconciliation engine (GitOps agent) - continously comparing and correcting
 3. Runtime Environment - the live system which is being managed
 
+### State Store
+
+There are 4 requirements to a state store
+1. Immutable - it cannot be silently changed after a state has been commited
+2. Versioned - every change has an unique indentifier (commit hash). a timestamp, an author and a message explaining the change
+3. Retains complete vesrion history - we can always do rollbacks
+4. Access controlled - no everyone can change the state
