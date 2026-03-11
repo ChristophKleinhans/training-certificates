@@ -41,3 +41,13 @@ There are 4 requirements to a state store
 2. Versioned - every change has an unique indentifier (commit hash). a timestamp, an author and a message explaining the change
 3. Retains complete vesrion history - we can always do rollbacks
 4. Access controlled - no everyone can change the state
+
+### Feedback Loop
+
+Gives us visibility into the state of the system. The feedback loop answers:
+- Did my commit actually get applied ?
+- Is the system healthy
+- Is there a drift right now
+- Did reconciliation succeed or fail
+
+In ArgoCD/Flux it would be *sync and health status*
