@@ -62,4 +62,24 @@ git revert abc1234
 git checkout ghi9012 -- deployment.yaml
 ```
 
+## GitOps Pricinpals
+
+The four Principles are *Declarative*, *Versioned and Immutable*, *Pulled automatically* and *Continously Reconciled*
+
+### 1. Declerative
+
+We define the end state we want, and the reconciliation engine figures out how to match the desired state. We are not describing it imperative of HOW to get to the state we want, iterative scripts are also not possible to version control.
+- git is single source of truth
+- same declaration produces the same result (Reproducibility)
+- When reading the manifest we automatically understand the state we want
+- Drift detection possible
+
+### 2. Versioned and Immutable
+
+- Versioned is that every change is tracked and has a history
+- Immutable is that once a version is write it cannot silently changed or be overwritten
+
+- Using tags like *latest* are an anti-pattern in GitOps
+
+### 3. 
 
