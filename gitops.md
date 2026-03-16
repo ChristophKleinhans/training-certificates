@@ -128,20 +128,23 @@ While DevSecOps follows the `shift left` appraoch where we have all the Security
 
 Blue Green Deployment: Two identical environments, Blue the current and green the new. Deploy the newest release to Green, test it without exposing it to real users (smoke test which tests critical paths automatically, Mirror/Shadown traffic from the real environment but the real users never see the responses). Now switch ALL customer at once to the new environment.
 
-### Canary Deployment
+#### Canary Deployment
 
 Rollout the new version to a small percentage of users first, then gradually increase if healthy. Real production testing with limited blast radius, but complex traffic splitting and monitoring
 
-### A/B Testing
+#### A/B Testing
 
 Same as canary but driven by business logic rather than percentages, f.i. premium and free users, users from germany or users from france, etc.
 
-### Rolling Update
+#### Rolling Update
 
 Gradually replace old instances with new ones, one by one or in batches.
 
-### Feature Flag (Feature Toggles)
+#### Feature Flag (Feature Toggles)
 
 Simply deploy it with a feture Flag OFF and switch it to ON as soon as we want to go live with it.
 
+### Progressive Delivery Patterns
 
+Its the evolution of Continuous Delivery: It is extending CD by adding fine-grained control over who gets the new software and when. Deliver progressively, savely and with automatic guardrails.
+Progressive Delivery essentially takes Canary, Blue/Green and Feature Flags and adds automation and intelligence on top — making rollout decisions based on real metrics, not just human judgment.
