@@ -116,3 +116,9 @@ While DevSecOps follows the `shift left` appraoch where we have all the Security
   Security integrated at EVERY stage (shift left!)
 ```
 
+### CI and CD
+- Continuous integration (CI) is the practice of automatically building and testing the code every time a developer is pushing a change to git
+-  Continuous Delivery (code is ready to deploy and waiting for human approaval) and Continous Deployment (code is automatically deployed to production without human approval)
+
+=> Its push-based, means the CI/CD pipeline reaches out and is directly pusing the changes into the cluster, like executing `kubectl apply ...`
+
