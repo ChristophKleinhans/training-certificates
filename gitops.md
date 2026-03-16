@@ -140,6 +140,8 @@ Same as canary but driven by business logic rather than percentages, f.i. premiu
 
 Gradually replace old instances with new ones, one by one or in batches.
 
-### Feature Flag
+### Feature Flag (Feature Toggles)
+
+Simply deploy it with a feture Flag OFF and switch it to ON as soon as we want to go live with it.
 
 
