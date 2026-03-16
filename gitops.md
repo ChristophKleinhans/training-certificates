@@ -90,5 +90,29 @@ We define the end state we want, and the reconciliation engine figures out how t
 - Loop of `observe current state` -> `compare with desired state` -> `Difference Found? Act!` -> `Correct Drift`
 - The loop never stops running and enforeces the other three principles
 
-  
+## Related Practices
+
+### Configuration as Code (CaC)
+
+- managing system and application configurations in version controlled files
+- f.i. configmaps stored in YAML in git
+- secrets could be stored in Git using a secrets operator
+- Helm values.yaml
+- Proetheus alert rules
+- nginx, istion, etc. configuration in Git
+
+### Infrastructure as Code (IaC)
+
+  - `writing Terraform/Helm files` -> `store in Git` -> `IaC tools applies automatically`
+
+### DevOps and DevSecOps
+
+- `DevOps vs. DevSecOps`: DevOps delivers sofware faster and more reliable by breaking down the wall between developers and operations teams, like CI/CD pipelines, automation, collaboration, fast feedback loops.
+While DevSecOps follows the `shift left` appraoch where we have all the Security practices applied in each stage of DevOps:
+
+```bash
+  Plan → Code → Build → Test → Release → Deploy → Operate
+    ↑      ↑      ↑       ↑        ↑        ↑        ↑
+  Security integrated at EVERY stage (shift left!)
+```
 
