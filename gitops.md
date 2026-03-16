@@ -134,7 +134,12 @@ Rollout the new version to a small percentage of users first, then gradually inc
 
 ### A/B Testing
 
+Same as canary but driven by business logic rather than percentages, f.i. premium and free users, users from germany or users from france, etc.
 
+### Rolling Update
 
+Gradually replace old instances with new ones, one by one or in batches.
+
+### Feature Flag
 
 
