@@ -122,3 +122,19 @@ While DevSecOps follows the `shift left` appraoch where we have all the Security
 
 => Its push-based, means the CI/CD pipeline reaches out and is directly pusing the changes into the cluster, like executing `kubectl apply ...`
 
+## GitOps Pattern
+
+### Deployment and release patterns
+
+Blue Green Deployment: Two identical environments, Blue the current and green the new. Deploy the newest release to Green, test it without exposing it to real users (smoke test which tests critical paths automatically, Mirror/Shadown traffic from the real environment but the real users never see the responses). Now switch ALL customer at once to the new environment.
+
+### Canary Deployment
+
+Rollout the new version to a small percentage of users first, then gradually increase if healthy. Real production testing with limited blast radius, but complex traffic splitting and monitoring
+
+### A/B Testing
+
+
+
+
+
