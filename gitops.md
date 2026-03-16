@@ -81,5 +81,14 @@ We define the end state we want, and the reconciliation engine figures out how t
 
 - Using tags like *latest* are an anti-pattern in GitOps
 
-### 3. 
+### 3. Pulled automatically
+
+- polling git between 1 and 3 minutes (can be adjusted) or event-based using a webhook
+
+### 4. Continously Reconciled
+
+- Loop of `observe current state` -> `compare with desired state` -> `Difference Found? Act!` -> `Correct Drift`
+- The loop never stops running and enforeces the other three principles
+
+  
 
