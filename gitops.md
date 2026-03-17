@@ -242,4 +242,22 @@ The state store is where the desired Gitstate of our system lives, our single so
 - Git like: GitHub, GitLab, Bitbucket, Azure DevOps. Self hosted is Gitea, GitLab . But Git strugles when it comes t f.i. to large helm charts or saving Secrets or handling large binaries
 - Secret-specific stores are HashiCorp Vault, AWS Secrets manager, etc
 - Flux can f.i. use S3 as a source instead of Git
+
+### Reconciliation Engines
+
+Flux and ArgoCD are both CNCF graduated
+
+- *ArgoCD* is the most widely used
+- *Flux* is a set of spezialized controllers that watch the source, like Git, a Helm and Kustomize controller, etc. . No UI. Everything is CRD.
+- *Fleet* designed for multi-cluster (thousands) for GitOps at scale, a lightweight agent on each cluster. Less feature rich
+- *Jenkins X* CI and CD in one tool, complex to set up and maintain
+- *Spinnaker* Netflix CD platform
+
+
+### Interoperability with Notifications, Observability, and Continuous Integration Tools
+
+- *Notifications*: At least we need to notify that `Sync succeeded/failed`, `App out of Sync`, `App health degraded`, `new image deployed`
+- ArgoCD has notification engine to publish events: Slack, Teams, PagerDuty, Mail, etc. . Flux has a notification controller.
 - 
+-  
+
