@@ -235,3 +235,11 @@ A manifest simply declares the desired state of a resource.
 - *Helm*: The most widley used Kubernetes package manager, like apt or npm. While a *chart* is a package of Kubernetes manifest with templating. *values* customize the chart, a *release* is a deployed instance of a chart and the *repository* is the collection of charts (like npm registry)
 - *Kustomize*: Using *overlays* built in kubectl natively. There is one *base* config and we simply have overlays f.i. for each stage like dev, qa, prod. Kustomize simply merges the overlay with the *base*.
 - *OCI (open container initiative) Artifacts*. First OCI only standardized container images (Docker images). But the format was so good, that it got extended to any kind of artifact, not just container images. Before OCI, Helm charts were stored in dedicated Helm repos, now in a OCI registry. One registry for Container images, helm charts, Kubernetes manifest, Terraform modules, WASM binaries, Software signatures, etc. .
+
+### State Store Systems (Git and alternatives)
+
+The state store is where the desired Gitstate of our system lives, our single source of truth:
+- Git like: GitHub, GitLab, Bitbucket, Azure DevOps. Self hosted is Gitea, GitLab . But Git strugles when it comes t f.i. to large helm charts or saving Secrets or handling large binaries
+- Secret-specific stores are HashiCorp Vault, AWS Secrets manager, etc
+- Flux can f.i. use S3 as a source instead of Git
+- 
