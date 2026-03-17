@@ -258,6 +258,5 @@ Flux and ArgoCD are both CNCF graduated
 
 - *Notifications*: At least we need to notify that `Sync succeeded/failed`, `App out of Sync`, `App health degraded`, `new image deployed`
 - ArgoCD has notification engine to publish events: Slack, Teams, PagerDuty, Mail, etc. . Flux has a notification controller.
-- 
--  
-
+- Prometheus metrics are exposed natively by both Argo CD and Flux
+- The CI vs. CD boundary — CI ends when it updates Git, GitOps takes over from there
