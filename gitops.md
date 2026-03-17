@@ -146,5 +146,32 @@ Simply deploy it with a feture Flag OFF and switch it to ON as soon as we want t
 
 ### Progressive Delivery Patterns
 
-Its the evolution of Continuous Delivery: It is extending CD by adding fine-grained control over who gets the new software and when. Deliver progressively, savely and with automatic guardrails.
-Progressive Delivery essentially takes Canary, Blue/Green and Feature Flags and adds automation and intelligence on top — making rollout decisions based on real metrics, not just human judgment.
+- Its the evolution of Continuous Delivery: It is extending CD by adding fine-grained control over who gets the new software and when. Deliver progressively, savely and with automatic guardrails.
+- Progressive Delivery essentially takes Canary, Blue/Green and Feature Flags and adds automation and intelligence on top — making rollout decisions based on real metrics, not just human judgement.
+1. Automated Metric Analysis (key difference to classic CD): The system automatically decides, whether to proceed, pause or rollback based on live metrics. F.i. 
+```bash
+Deploy v2 to 10% traffic
+        ↓
+Measure: error rate, latency, CPU, business KPIs
+        ↓
+Error rate < 1%? ✅  → Proceed to 25%
+Error rate > 5%? ❌  → Automatic rollback to v1
+```
+
+2. Progressive Traffic Shifting: Traffic is moved gradually in controlled steps, while each step is gated by the metric analysis from step 1.
+```bash
+Step 1:   5% → v2,  95% → v1   (observe)
+Step 2:  25% → v2,  75% → v1   (observe)
+Step 3:  50% → v2,  50% → v1   (observe)
+Step 4: 100% → v2,   0% → v1   ✅ done
+```
+
+3. Automatic Rollback: If metrics cross a defined threshold at any step, the system automatically rolls back
+```bash
+Step 2:  25% → v2  ← error rate spikes to 8% ❌
+              ↓
+     Automatic rollback
+              ↓
+       100% → v1 restored ✅
+     (without any human intervention)
+```
