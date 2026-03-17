@@ -181,3 +181,47 @@ For the exam, remember:
 - The key differentiator is automated metric-based promotion and rollback
 - *Argo Rollouts* is the primary GitOps-native tool for this
 - Progressive Delivery makes Canary deployments intelligent and self-driving
+
+### GitOps Architecture Patterns
+
+1. *In cluster reconciler* means the gitops agent runs in the same cluster (most common):
+```bash
+┌─────────────────────────────────┐
+│         Kubernetes Cluster      │
+│                                 │
+│  ┌─────────────┐                │
+│  │  Argo CD /  │ ←── pulls ──── Git Repo
+│  │    Flux     │                │
+│  └──────┬──────┘                │
+│         │ reconciles            │
+│         ▼                       │
+│  ┌─────────────┐                │
+│  │  Workloads  │                │
+│  │  (your app) │                │
+│  └─────────────┘                │
+└─────────────────────────────────┘
+```
+
+2. *external reconciler* means the gitops agent runs outside the cluster, could be also created as Hub-Spoke Pattern with hundreds of clusters:
+```bash
+┌──────────────────────┐          ┌─────────────────────┐
+│   Management Cluster │          │  Target Cluster 1   │
+│                      │          │  ┌───────────────┐  │
+│  ┌────────────────┐  │──────────►  │   Workloads   │  │
+│  │   Argo CD /    │  │          │  └───────────────┘  │
+│  │     Flux       │  │          └─────────────────────┘
+│  └───────┬────────┘  │
+│          │           │          ┌─────────────────────┐
+│          │ pulls     │          │  Target Cluster 2   │
+└──────────┼───────────┘          │  ┌───────────────┐  │
+           │                      │  │   Workloads   │  │
+           ▼                      │  └───────────────┘  │
+        Git Repo                  └─────────────────────┘
+```
+
+3. *State Store Management* in gitops its always git
+4. *Apps of Apps pattern* is a gitops way to manage many applications decelaratively. There is a root app, that in turn manage all other apps
+- App-of-Apps is a valid pattern but has the scalability/crowding limitation
+- ApplicationSet is the modern solution that solves the crowding limitation
+- ApplicationSet uses generators to dynamically create Applications
+- Both patterns keep everything defined in Git
