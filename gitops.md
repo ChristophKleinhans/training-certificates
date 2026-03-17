@@ -175,3 +175,9 @@ Step 2:  25% → v2  ← error rate spikes to 8% ❌
        100% → v1 restored ✅
      (without any human intervention)
 ```
+
+For the exam, remember:
+- Progressive Delivery = Continuous Delivery + automated guardrails
+- The key differentiator is automated metric-based promotion and rollback
+- *Argo Rollouts* is the primary GitOps-native tool for this
+- Progressive Delivery makes Canary deployments intelligent and self-driving
