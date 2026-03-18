@@ -99,7 +99,7 @@ We define the end state we want, and the reconciliation engine figures out how t
 - secrets could be stored in Git using a secrets operator
 - Helm values.yaml
 - Proetheus alert rules
-- nginx, istion, etc. configuration in Git
+- nginx, istio, etc. configuration in Git
 
 ### Infrastructure as Code (IaC)
 
