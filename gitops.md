@@ -16,7 +16,7 @@ What should the system look like. Git is the single source of truth. We control 
 
 ### State Drift
 
-the actual state differs from the desired state which is defined in git. F.i. someone did a `kubectl delete pod/...` . The agents will continuously watch for drifts and correct it automaticall. It is important to have alerts, so in a case that something is deleted and created again, we will be alerted, otherwise the agent will simply create again and does not care if there is maybe a data loss.
+the actual state differs from the desired state which is defined in git. F.i. someone did a `kubectl delete pod/...` . The agents will continuously watch for drifts and correct it automatically. It is important to have alerts, so in a case that something is deleted and created again, we will be alerted, otherwise the agent will simply create again and does not care if there is maybe a data loss.
 
 
 ### State Reconciliation
