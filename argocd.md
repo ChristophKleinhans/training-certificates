@@ -6,6 +6,6 @@
 
 - Argo Workflows is implemented as a Kubernetes CRD
 - Each step runs a single K8s pod (not a Job Pod). Each pod has multiple container inside it. At least these containers are present:
-  1. InitContainer: Copies the `argoexec` binary into a shared volume so the other containers can use it and also downloads any input artifacts
-  2. Container: This is the main container. It runs what we define in the YAML
-  3. Wait: This is a sidecar which runs alongside the main container using the argoexec. It monitors the main container, collects output parameters and artifacts. When it finishes, it reports status back to the workflow controller. 
+  1. **InitContainer**: Copies the `argoexec` binary into a shared volume so the other containers can use it and also downloads any input artifacts
+  2. **Container**: This is the main container. It runs what we define in the YAML
+  3. **Wait**: This is a sidecar which runs alongside the main container using the argoexec. It monitors the main container, collects output parameters and artifacts. When it finishes, it reports status back to the workflow controller. 
