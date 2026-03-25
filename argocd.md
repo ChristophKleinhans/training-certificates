@@ -32,6 +32,7 @@
 
 
 - There are two ways to pass data between steps:
+
 | | Parameters | Artifacts |
 |---|---|---|
 | What | Strings only | Any file |
