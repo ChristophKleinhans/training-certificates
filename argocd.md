@@ -112,13 +112,13 @@ inputs:
         template: flip-coin
     - - name: heads
         template: heads
-        when: "{{steps.flip-coin.outputs.result}} == heads"
+        when: "{{steps.flip-coin.outputs.result}} == heads" # Condition 1
       - name: tails
         template: tails
-        when: "{{steps.flip-coin.outputs.result}} == tails"
+        when: "{{steps.flip-coin.outputs.result}} == tails" # Condition 2
   outputs:
     artifacts:
       - name: result
-        fromExpression: "steps['flip-coin'].outputs.result == 'heads' ? steps.heads.outputs.artifacts.headsresult : steps.tails.outputs.artifacts.tailsresult"
+        fromExpression: "steps['flip-coin'].outputs.result == 'heads' ? steps.heads.outputs.artifacts.headsresult : steps.tails.outputs.artifacts.tailsresult" # Artifacts condition
 ```
 
