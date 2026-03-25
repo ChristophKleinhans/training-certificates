@@ -83,4 +83,14 @@ spec:
       args: ["cat /tmp/message"]
 ```
 
+- We can fetch external artifacts from s3, git, http, etc. :
+```yaml
+inputs:
+  artifacts:
+    - name: source-code
+      path: /src
+      git:                      # Argo fetches this externally — no prior step needed
+        repo: https://github.com/my-org/my-repo.git
+```
+
 
