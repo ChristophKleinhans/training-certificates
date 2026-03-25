@@ -104,4 +104,21 @@ inputs:
         repo: https://github.com/my-org/my-repo.git
 ```
 
+- We can add condtitions to artifacts and the steps:
+```yaml
+- name: coinflip
+  steps:
+    - - name: flip-coin
+        template: flip-coin
+    - - name: heads
+        template: heads
+        when: "{{steps.flip-coin.outputs.result}} == heads"
+      - name: tails
+        template: tails
+        when: "{{steps.flip-coin.outputs.result}} == tails"
+  outputs:
+    artifacts:
+      - name: result
+        fromExpression: "steps['flip-coin'].outputs.result == 'heads' ? steps.heads.outputs.artifacts.headsresult : steps.tails.outputs.artifacts.tailsresult"
+```
 
