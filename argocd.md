@@ -31,6 +31,8 @@
 
 Here an example of how artifacts are generated and consumed:
 
+- A key-only artifact is an input or output where we only specify the key, omitting the bucket, secrets etc. When these are omitted, the bucket/secrets form the configured artifact repository is used
+- We can generate a configmap with the repository information. The annotation of the configmap is f.i. for S3 buckets `workflows.argoproj.io/default-artifact-repository: default-v1-s3-artifact-repository`. In the configmap data sections we provide the endpoint, credentials etc. for the bucket. It can be used by any workflow.
 - `spec.teplates` with the Orchestrator steps template is first generating an artifact and the succesor step is consuming it by referencing it in the `artifacts.from`
 - The steps use a simple container template
 
