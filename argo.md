@@ -273,3 +273,170 @@ spec:
 > while listing multiple items under a single `- -` runs them in *parallel*.
 > A `dag` template expresses the same ordering instead through explicit
 > `dependencies:` between tasks.
+
+
+### Work with DAG (Directed-Acyclic Graphs)
+
+A `dag` template is an **orchestrator**: it lists *tasks* and the *dependencies*
+between them, then Argo runs each task as soon as its dependencies finish.
+Independent branches run in parallel automatically.
+
+Contrast with `steps`:
+- `steps` = sequential stages, you arrange the order ("do these, then those").
+- `dag`   = declare dependencies, Argo derives the order and maximizes parallelism.
+
+The flow below is the classic **diamond**: `A` runs first, then `B` and `C` run
+**in parallel**, and `D` waits for **both**.
+
+```
+        A
+       / \
+      B   C        <- B and C run in parallel
+       \ /
+        D
+```
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: dag-diamond-
+spec:
+  entrypoint: diamond                 # Start at the `diamond` DAG template.
+
+  templates:
+
+    # ===== ORCHESTRATOR: the DAG template =====================================
+    - name: diamond
+      dag:
+        # failFast (default true): on a task failure, stop scheduling NEW tasks.
+        # Set false to let branches that don't depend on the failure keep running.
+        failFast: true
+        tasks:
+
+          # ── Root task: no dependencies, so it runs immediately. ──
+          - name: A
+            template: echo            # Which worker template this task runs.
+            arguments:
+              parameters:
+                - name: message
+                  value: "A"
+
+          # ── B depends on A (simple list form). ──
+          - name: B
+            dependencies: [A]         # Older syntax: wait for ALL listed tasks to succeed.
+            template: echo
+            arguments:
+              parameters:
+                - name: message
+                  # Cross-task parameter passing uses `tasks.` (NOT `steps.`).
+                  value: "B saw {{tasks.A.outputs.parameters.result}}"
+
+          # ── C also depends on A, so B and C run in parallel. ──
+          # Here we use the newer `depends` string form instead of `dependencies`.
+          - name: C
+            depends: "A"              # Newer syntax. Use `depends` OR `dependencies`, not both.
+            template: echo
+            arguments:
+              parameters:
+                - name: message
+                  value: "C saw {{tasks.A.outputs.parameters.result}}"
+
+          # ── D depends on BOTH B and C via a boolean expression. ──
+          - name: D
+            # `depends` supports boolean logic (&&, ||, !) and result qualifiers:
+            #   .Succeeded .Failed .Errored .Skipped .Omitted .Daemoned
+            # e.g. "B.Succeeded && (C.Succeeded || C.Skipped)"
+            depends: "B && C"
+            template: echo
+            arguments:
+              parameters:
+                - name: message
+                  value: "D ran after B and C"
+
+          # ── Optional error-handling branch (only runs if A FAILED). ──
+          # Demonstrates result qualifiers; with failFast this lets you react to failure.
+          - name: on-failure
+            depends: "A.Failed"
+            template: echo
+            arguments:
+              parameters:
+                - name: message
+                  value: "fallback: A failed"
+
+    # ===== WORKER: a reusable container template ==============================
+    - name: echo
+      inputs:
+        parameters:
+          - name: message
+      container:
+        image: alpine:3.20
+        command: [sh, -c]
+        args: ["echo '{{inputs.parameters.message}}'; echo '{{inputs.parameters.message}}' > /tmp/r.txt"]
+      outputs:
+        parameters:
+          - name: result             # Exposed downstream as {{tasks.<name>.outputs.parameters.result}}
+            valueFrom:
+              path: /tmp/r.txt
+```
+
+## Fan-out variant (loops over a DAG task)
+
+A single task can expand into parallel instances with `withItems` / `withParam`
+/ `withSequence` — a common way to process a list concurrently inside a DAG.
+
+```yaml
+        tasks:
+          - name: process
+            template: echo
+            arguments:
+              parameters:
+                - name: message
+                  value: "{{item}}"   # `{{item}}` is the current loop element.
+            withItems:                # Creates 3 parallel `process` instances.
+              - alpha
+              - beta
+              - gamma
+```
+
+## Quick reference
+
+| Field | Purpose |
+|-------|---------|
+| `dag.tasks` | The list of tasks in the graph |
+| `task.name` | Unique identifier for the task within the DAG |
+| `task.template` | The worker template this task executes |
+| `task.dependencies` | List form — wait for ALL listed tasks (success) |
+| `task.depends` | Boolean form — `&&`, `\|\|`, `!` plus result qualifiers |
+| `task.arguments` | Parameters/artifacts passed into the task |
+| `task.when` | Conditional execution of the task |
+| `withItems` / `withParam` / `withSequence` | Fan a task out into parallel instances |
+| `dag.failFast` | `false` keeps independent branches running after a failure |
+| `dag.target` | Run only a named subset of the graph |
+
+## Result qualifiers for `depends`
+
+| Qualifier | True when the upstream task… |
+|-----------|------------------------------|
+| `.Succeeded` | finished successfully |
+| `.Failed` | ran but failed |
+| `.Errored` | errored (infra/system level) |
+| `.Skipped` | was skipped (e.g. its `when` was false) |
+| `.Omitted` | was omitted because its own deps weren't met |
+| `.Daemoned` | is a daemon task that has started |
+
+> A bare task name in `depends` (e.g. `"A"`) is shorthand for
+> `(A.Succeeded || A.Skipped || A.Daemoned)`. Spell out a qualifier when you
+> need different behavior, such as the `A.Failed` fallback branch above.
+
+## Exam-relevant distinctions
+
+1. **`steps` vs `dag`.** Same job (orchestration), different model: stages-in-order
+   vs dependencies-derive-order. DAG is the tool when branches are independent and
+   you want them parallel, or when ordering is a graph rather than a line.
+2. **`dependencies` vs `depends`.** `dependencies` is a plain "all of these
+   succeeded" list; `depends` is a boolean expression with result qualifiers.
+   One task uses one or the other, never both.
+3. **`tasks.` references.** Inside a DAG you read upstream outputs with
+   `{{tasks.<name>.outputs.parameters.<x>}}` — the analogue of `{{steps...}}`
+   in a steps template.
