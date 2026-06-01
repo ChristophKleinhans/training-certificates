@@ -121,3 +121,155 @@ inputs:
 | `http` | Worker | No | `http:` | Trigger webhooks or call external REST APIs |
 | `plugin` | Worker | No | `plugin:` | Delegate to a custom executor plugin |
 | `containerSet` | Worker | Yes (shared pod) | `containerSet:` | Multiple containers with dependencies in one pod |
+
+
+### Argo Workflow Spec
+
+
+This is a single, self-contained `Workflow` that exercises the parts of the
+spec you need to recognize for the CAPA topic *"Understand the Argo Workflow
+Spec"*. Every block is commented so you can map field → purpose at a glance.
+
+The flow it models: **generate a value → consume that value → run an exit
+handler when everything finishes.**
+
+```yaml
+# ─────────────────────────────────────────────────────────────────────────────
+# TOP-LEVEL OBJECT
+# A Workflow is a Kubernetes Custom Resource (defined by the Argo CRD).
+# These three fields are standard Kubernetes object boilerplate.
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: argoproj.io/v1alpha1     # The Argo API group + version
+kind: Workflow                       # The resource type (other kinds: CronWorkflow, WorkflowTemplate)
+metadata:
+  generateName: spec-demo-           # Prefix; the API server appends a random suffix to make a unique name.
+                                     # Use `name:` instead if you want a fixed, explicit name.
+  labels:
+    purpose: capa-study              # Arbitrary labels — useful for querying/filtering with kubectl.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SPEC — everything about WHAT runs and HOW the run is configured.
+# ─────────────────────────────────────────────────────────────────────────────
+spec:
+  entrypoint: main                   # REQUIRED-ish: which template runs first (the "main" function).
+
+  # Workflow-level arguments. These are the defaults injected into the run and
+  # can be overridden at submit time (e.g. `argo submit -p greeting=hi`).
+  arguments:
+    parameters:
+      - name: greeting
+        value: "hello"               # A string parameter available as {{workflow.parameters.greeting}}
+
+  # ── Run-wide configuration fields (all optional) ──
+  serviceAccountName: argo-workflow  # Identity the pods run as (RBAC / artifact access).
+  ttlStrategy:
+    secondsAfterCompletion: 300      # Auto-delete the Workflow object 5 min after it finishes (cleanup).
+  podGC:
+    strategy: OnPodCompletion        # Garbage-collect each step's pod as soon as that step completes.
+  onExit: exit-handler               # Template run when the workflow ends — success OR failure (like `finally`).
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # TEMPLATES — the list of reusable "functions".
+  # Two broad categories:
+  #   • template-INVOKING  (steps, dag) — orchestrate other templates, do no work themselves.
+  #   • template-DEFINING  (container, script, resource, suspend) — actually do work.
+  # ───────────────────────────────────────────────────────────────────────────
+  templates:
+
+    # ===== 1) ORCHESTRATOR (a `steps` template) ===============================
+    # `steps` runs stages top-to-bottom.
+    #   - One dash  ("-  - name:")  = a NEW sequential stage (runs after the previous).
+    #   - Two dashes on the same line = steps that run IN PARALLEL within a stage.
+    - name: main
+      steps:
+        - - name: generate            # Stage 1
+            template: generate-value
+        - - name: consume             # Stage 2 (waits for Stage 1)
+            template: print-value
+            arguments:                # Pass outputs of the previous step into this one.
+              parameters:
+                - name: input-text
+                  # Parameter substitution: pull the named output param from the prior step.
+                  value: "{{steps.generate.outputs.parameters.message}}"
+              artifacts:
+                - name: payload
+                  # Bind the file artifact produced by the prior step.
+                  from: "{{steps.generate.outputs.artifacts.payload-art}}"
+
+    # ===== 2) WORKER (a `script` template) ====================================
+    # A `script` is a container PLUS an inline script. Its stdout is automatically
+    # captured and exposed as {{...outputs.result}}.
+    - name: generate-value
+      script:
+        image: python:3.12-alpine     # The container image for this step.
+        command: [python]             # Interpreter that runs the `source` below.
+        source: |                     # The inline script body.
+          import json, pathlib
+          msg = "computed-value-42"
+          print(msg)                                  # -> outputs.result
+          pathlib.Path("/tmp/out.txt").write_text(msg) # -> file we expose as an artifact + param
+      outputs:
+        parameters:
+          - name: message             # A named output parameter...
+            valueFrom:
+              path: /tmp/out.txt       # ...whose value is read from this file inside the container.
+        artifacts:
+          - name: payload-art         # A named output artifact...
+            path: /tmp/out.txt         # ...packaged from this path (file OR directory).
+
+    # ===== 3) WORKER (a `container` template) =================================
+    # The most common template type: run a container with image/command/args.
+    - name: print-value
+      inputs:                         # Declare what this template expects to receive.
+        parameters:
+          - name: input-text          # Available below as {{inputs.parameters.input-text}}
+        artifacts:
+          - name: payload
+            path: /tmp/payload         # Where Argo unpacks the incoming artifact in this container.
+      container:
+        image: alpine:3.20
+        command: [sh, -c]
+        args:
+          # {{workflow.parameters.*}} reaches the workflow-level args;
+          # {{inputs.parameters.*}}   reaches this template's inputs.
+          - "echo greeting='{{workflow.parameters.greeting}}'; echo got='{{inputs.parameters.input-text}}'; cat /tmp/payload"
+
+    # ===== 4) EXIT HANDLER (a `container` template) ===========================
+    # Referenced by spec.onExit. Runs once at the very end, regardless of outcome.
+    - name: exit-handler
+      container:
+        image: alpine:3.20
+        command: [sh, -c]
+        # {{workflow.status}} is a built-in global var (Succeeded / Failed / Error).
+        args: ["echo 'workflow finished with status: {{workflow.status}}'"]
+```
+
+#### Quick anatomy reference
+
+| Area | Field(s) | What it does |
+|------|----------|--------------|
+| Object header | `apiVersion`, `kind`, `metadata` | Standard Kubernetes CRD boilerplate |
+| Run entry | `spec.entrypoint` | Names the first template to execute |
+| Inputs to the run | `spec.arguments` | Workflow-level parameters/artifacts (overridable at submit) |
+| Run config | `serviceAccountName`, `ttlStrategy`, `podGC`, `parallelism`, `volumes`, `onExit` | Identity, cleanup, concurrency, storage, finalizer |
+| Orchestrators | `steps`, `dag` | Invoke other templates; do no work themselves |
+| Workers | `container`, `script`, `resource`, `suspend` | Actually perform work |
+| Data flow | `inputs`, `outputs`, `arguments` | Pass parameters (strings) and artifacts (files/dirs) between steps |
+| Substitution | `{{...}}` | Reference params, step outputs, and built-in globals like `{{workflow.status}}` |
+
+#### The two distinctions examiners probe most
+
+1. **Orchestrator vs worker template.** Reading a manifest, you should instantly
+   tell whether a template *runs* something (`container`/`script`) or *coordinates*
+   other templates (`steps`/`dag`). In the example, `main` is the only orchestrator;
+   the other three are workers.
+
+2. **Parameters vs artifacts.** Parameters are small strings passed by value
+   (`message` above). Artifacts are files or directories passed by reference and
+   moved via the artifact repository (`payload-art` above). The example produces
+   both from the same file so you can see the syntax difference side by side.
+
+> Note on the `steps` dash convention: `- -` starts a new *sequential* stage,
+> while listing multiple items under a single `- -` runs them in *parallel*.
+> A `dag` template expresses the same ordering instead through explicit
+> `dependencies:` between tasks.
