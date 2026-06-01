@@ -436,6 +436,9 @@ processing, ML pipelines) on Kubernetes. This domain is mostly about combining
 features you've already seen into the canonical **split → map → reduce** pattern,
 plus the knobs that keep big jobs efficient and resilient.
 
+> [!NOTE]
+> **Split → Map → Reduce** — a large input is **split** into independent chunks, the same operation is **mapped** over each chunk in parallel, and the per-chunk results are **reduced** into the final answer. The chunks are independent, so the map phase scales across many workers — which is why it fits batch data and ML pipelines.
+
 Key ideas:
 - **Dynamic fan-out** with `withParam` — spawn one parallel pod per work item,
   where the list of items is produced at runtime by an earlier step.
