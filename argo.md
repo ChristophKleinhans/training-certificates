@@ -380,7 +380,7 @@ spec:
               path: /tmp/r.txt
 ```
 
-## Fan-out variant (loops over a DAG task)
+#### Fan-out variant (loops over a DAG task)
 
 A single task can expand into parallel instances with `withItems` / `withParam`
 / `withSequence` — a common way to process a list concurrently inside a DAG.
@@ -399,7 +399,7 @@ A single task can expand into parallel instances with `withItems` / `withParam`
               - gamma
 ```
 
-## Quick reference
+#### Quick reference
 
 | Field | Purpose |
 |-------|---------|
@@ -414,7 +414,7 @@ A single task can expand into parallel instances with `withItems` / `withParam`
 | `dag.failFast` | `false` keeps independent branches running after a failure |
 | `dag.target` | Run only a named subset of the graph |
 
-## Result qualifiers for `depends`
+#### Result qualifiers for `depends`
 
 | Qualifier | True when the upstream task… |
 |-----------|------------------------------|
@@ -428,15 +428,3 @@ A single task can expand into parallel instances with `withItems` / `withParam`
 > A bare task name in `depends` (e.g. `"A"`) is shorthand for
 > `(A.Succeeded || A.Skipped || A.Daemoned)`. Spell out a qualifier when you
 > need different behavior, such as the `A.Failed` fallback branch above.
-
-## Exam-relevant distinctions
-
-1. **`steps` vs `dag`.** Same job (orchestration), different model: stages-in-order
-   vs dependencies-derive-order. DAG is the tool when branches are independent and
-   you want them parallel, or when ordering is a graph rather than a line.
-2. **`dependencies` vs `depends`.** `dependencies` is a plain "all of these
-   succeeded" list; `depends` is a boolean expression with result qualifiers.
-   One task uses one or the other, never both.
-3. **`tasks.` references.** Inside a DAG you read upstream outputs with
-   `{{tasks.<name>.outputs.parameters.<x>}}` — the analogue of `{{steps...}}`
-   in a steps template.
