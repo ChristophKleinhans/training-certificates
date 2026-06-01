@@ -292,3 +292,5 @@ argocd app sync web-app --replace --prune
 4. **Automated sync doesn't retry by default.** Add a `retry` block for backoff.
 5. **`PruneLast` and `Prune=false`.** `PruneLast` defers pruning until after a
    successful sync; the per-resource `Prune=false` annotation exempts a resource.
+
+
