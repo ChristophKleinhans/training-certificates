@@ -428,3 +428,203 @@ A single task can expand into parallel instances with `withItems` / `withParam`
 > A bare task name in `depends` (e.g. `"A"`) is shorthand for
 > `(A.Succeeded || A.Skipped || A.Daemoned)`. Spell out a qualifier when you
 > need different behavior, such as the `A.Failed` fallback branch above.
+
+### Run Data Processing Jobs with Argo Workflows — Annotated Example
+
+Argo was built to orchestrate **parallel, compute-intensive jobs** (data/batch
+processing, ML pipelines) on Kubernetes. This domain is mostly about combining
+features you've already seen into the canonical **split → map → reduce** pattern,
+plus the knobs that keep big jobs efficient and resilient.
+
+Key ideas:
+- **Dynamic fan-out** with `withParam` — spawn one parallel pod per work item,
+  where the list of items is produced at runtime by an earlier step.
+- **Fan-in (reduce)** — a loop step's output parameters are auto-aggregated into
+  a JSON array you can pass to a single aggregation step.
+- **`parallelism`** — cap how many pods run concurrently.
+- **`resources`** — request/limit CPU, memory, and GPUs for heavy work.
+- **`retryStrategy`** — survive transient failures in long jobs.
+- **Artifacts** — move large data files (not small strings) between steps.
+
+```
+   split  ->  [ process #0 | process #1 | process #2 | process #3 ]  ->  reduce
+  (decide N)            map phase (runs in parallel)                  (aggregate)
+```
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: map-reduce-
+spec:
+  entrypoint: data-pipeline
+
+  # Cap TOTAL concurrent pods across the whole workflow. Critical when a split
+  # produces hundreds of items and you don't want to flood the cluster.
+  parallelism: 3
+
+  arguments:
+    parameters:
+      - name: partitions
+        value: "4"                    # How many chunks to split the work into.
+
+  templates:
+
+    # ===== PIPELINE ORCHESTRATOR (split -> map -> reduce) =====================
+    - name: data-pipeline
+      steps:
+        # --- 1) SPLIT: produce the list of work items at runtime ---
+        - - name: split
+            template: split-input
+            arguments:
+              parameters:
+                - name: count
+                  value: "{{workflow.parameters.partitions}}"
+
+        # --- 2) MAP: fan out — one parallel pod per item in the list ---
+        - - name: map
+            template: process-chunk
+            # withParam takes a JSON-array STRING (here, the stdout of `split`).
+            # Argo creates one `process-chunk` instance per element.
+            withParam: "{{steps.split.outputs.result}}"
+            arguments:
+              parameters:
+                - name: chunk
+                  value: "{{item}}"   # `{{item}}` = current element. Use {{item.field}} for objects.
+
+        # --- 3) REDUCE: fan in — aggregate all parallel outputs ---
+        - - name: reduce
+            template: aggregate
+            arguments:
+              parameters:
+                - name: partials
+                  # A loop step's output params are AUTO-AGGREGATED into a JSON
+                  # array string. One line collects every map instance's result.
+                  value: "{{steps.map.outputs.parameters.partial}}"
+
+    # ===== SPLIT WORKER: emits a JSON list to stdout (-> outputs.result) ======
+    - name: split-input
+      inputs:
+        parameters:
+          - name: count
+      script:
+        image: python:3.12-alpine
+        command: [python]
+        source: |
+          import json
+          n = int("{{inputs.parameters.count}}")
+          print(json.dumps([str(i) for i in range(n)]))   # e.g. ["0","1","2","3"]
+
+    # ===== MAP WORKER: the compute-heavy, parallelized step ===================
+    - name: process-chunk
+      inputs:
+        parameters:
+          - name: chunk
+      # Make long/heavy jobs resilient to transient failures.
+      retryStrategy:
+        limit: "2"
+        retryPolicy: OnError          # OnFailure | OnError | OnTransientError | Always
+        backoff:
+          duration: "10s"
+          factor: "2"                 # exponential backoff: 10s, 20s, ...
+      script:
+        image: python:3.12-alpine
+        command: [python]
+        source: |
+          chunk = int("{{inputs.parameters.chunk}}")
+          result = chunk * chunk      # stand-in for real processing
+          with open("/tmp/partial.txt", "w") as f:
+              f.write(str(result))
+        # Resource requests/limits matter for compute-intensive jobs.
+        # For GPU work add e.g.  limits: { nvidia.com/gpu: 1 }
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      outputs:
+        parameters:
+          - name: partial             # Declared output param -> aggregated by the loop.
+            valueFrom:
+              path: /tmp/partial.txt
+
+    # ===== REDUCE WORKER: receives the aggregated JSON array ==================
+    - name: aggregate
+      inputs:
+        parameters:
+          - name: partials            # Arrives as a JSON array string, e.g. ["0","1","4","9"]
+      script:
+        image: python:3.12-alpine
+        command: [python]
+        source: |
+          import json
+          partials = json.loads('{{inputs.parameters.partials}}')
+          total = sum(int(x) for x in partials)
+          print("aggregated total =", total)
+```
+
+#### Moving real data: artifacts, not parameters
+
+Parameters are for small strings. Real datasets travel as **artifacts**, backed
+by an artifact repository (S3, GCS, Azure Blob, MinIO, etc.). Pattern:
+
+```yaml
+    # producer writes a file and exposes it as an output artifact
+    outputs:
+      artifacts:
+        - name: dataset
+          path: /tmp/data.csv
+          # s3:  { key: "runs/{{workflow.name}}/data.csv" }   # repo-specific target
+
+    # consumer declares it as an input artifact; Argo stages it at the path
+    inputs:
+      artifacts:
+        - name: dataset
+          path: /data/input.csv
+```
+
+#### Shared scratch storage (large intermediate data)
+
+For steps that need a shared disk rather than file-by-file artifact passing:
+
+```yaml
+spec:
+  volumeClaimTemplates:               # Argo provisions a PVC for the workflow...
+    - metadata: { name: workdir }
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources: { requests: { storage: 1Gi } }
+  # ...then each container mounts it:
+  # volumeMounts: [ { name: workdir, mountPath: /work } ]
+```
+
+#### Quick reference
+
+| Feature | Field | Use in data jobs |
+|---------|-------|------------------|
+| Static fan-out | `withItems` | Loop over a hardcoded list |
+| Dynamic fan-out | `withParam` | Loop over a runtime-produced JSON list (split phase) |
+| Numeric fan-out | `withSequence` | Loop over a numeric range |
+| Concurrency cap | `parallelism` | Limit simultaneous pods (workflow or template level) |
+| Compute sizing | `resources` | CPU/memory requests+limits; GPUs via `nvidia.com/gpu` |
+| Resilience | `retryStrategy` | Retry transient failures with backoff |
+| Skip recompute | `memoize` | Cache a step's output by key |
+| Small values out | `outputs.parameters` | Auto-aggregated across a loop (reduce input) |
+| Large data | `inputs/outputs.artifacts` | Move files via the artifact repository |
+| Shared disk | `volumeClaimTemplates` | Provision a PVC for intermediate data |
+
+#### Exam-relevant points
+
+1. **`withItems` vs `withParam`.** Static list vs runtime-generated list. Data
+   pipelines almost always need `withParam` because the partition count isn't
+   known until the split step runs.
+2. **Loop output aggregation.** A looped step's `outputs.parameters.<name>`
+   becomes a JSON array — this is what makes a one-line reduce step possible.
+3. **Parameters vs artifacts for data.** Parameters carry small control values;
+   artifacts (S3/GCS/MinIO-backed) carry the actual datasets. Don't shove large
+   payloads through parameters.
+4. **Why `parallelism` matters.** A split into hundreds of items would otherwise
+   launch hundreds of pods at once; `parallelism` throttles that to protect the
+   cluster.
