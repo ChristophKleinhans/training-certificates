@@ -117,17 +117,178 @@ spec:
       kind: Namespace
 ```
 
+# Synchronize Applications Using Argo CD — Annotated Example
+
+A **sync** is the operation that applies Git's desired state to the cluster,
+moving live state toward target. This domain is about *how* sync runs, *when*
+it triggers, and *in what order* resources are applied.
+
+## Manual vs. Automated sync
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: web-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/example/web-app.git
+    targetRevision: main
+    path: manifests
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: web
+
+  syncPolicy:
+    # ── AUTOMATED: omit this whole block for MANUAL sync ──
+    automated:
+      prune: true                    # Delete live resources removed from Git.
+      selfHeal: true                 # Revert manual cluster edits back to Git.
+      allowEmpty: false              # Refuse to sync down to zero resources (safety).
+
+    # Applies to manual AND automated retries (automated does NOT retry without this).
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2                    # 5s, 10s, 20s, ...
+        maxDuration: 3m
+
+    syncOptions:
+      - CreateNamespace=true         # Create destination namespace if missing.
+      - ApplyOutOfSyncOnly=true      # Only apply resources that are OutOfSync (faster).
+      - PruneLast=true               # Prune only after other resources sync successfully.
+      - Validate=false               # Skip `kubectl apply --validate`.
+      # - Replace=true               # Use `kubectl replace` instead of `apply`.
+```
+
+- **Manual**: a human/CI triggers `argocd app sync web-app` after reviewing the diff.
+- **Automated**: Argo CD syncs itself on detected drift. `prune` and `selfHeal`
+  control destructive/corrective behavior; `selfHeal` waits a short reconciliation
+  interval before reverting manual changes.
+
+## Two INDEPENDENT ordering mechanisms
+
+### 1) Sync PHASES — the coarse timeline of one sync
+
+```
+PreSync  ──▶  Sync  ──▶  PostSync
+                 │
+                 └─(on failure)─▶  SyncFail
+```
+
+| Phase | Typical use |
+|-------|-------------|
+| **PreSync** | DB migration, schema setup — runs *before* the main apply |
+| **Sync** | The application's actual manifests |
+| **PostSync** | Smoke tests, notifications — runs *after* the app is healthy |
+| **SyncFail** | Cleanup that runs only if the sync failed |
+
+### 2) Sync WAVES — fine ordering WITHIN a phase
+
+Resources carry an annotation; Argo applies them in **ascending** wave order and
+waits for each wave to be **healthy** before the next. Default wave is `0`;
+negatives run first.
+
+```yaml
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"   # e.g. CRDs / namespaces first
+```
+
+> Full ordering rule: **phase first, then wave within the phase**, then by
+> kind/name. So a PostSync resource always runs after every Sync-phase wave.
+
+## Resource HOOKS (attach work to phases)
+
+A hook is a normal resource (usually a `Job`) annotated to run during a phase.
+This is Argo CD's GitOps-native replacement for Helm hooks.
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migrate
+  annotations:
+    # WHEN to run: PreSync | Sync | PostSync | SyncFail | Skip
+    argocd.argoproj.io/hook: PreSync
+    # WHEN to delete the hook resource afterward:
+    #   HookSucceeded | HookFailed | BeforeHookCreation
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+    argocd.argoproj.io/sync-wave: "0"    # Hooks honor waves too.
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: migrate/migrate:latest
+          args: ["-path=/migrations", "-database=$(DB_URL)", "up"]
+```
+
+| Hook phase | Runs… |
+|------------|-------|
+| `PreSync` | before applying the main manifests (e.g. migrations) |
+| `Sync` | alongside the main resources, within the Sync phase |
+| `PostSync` | after all Sync resources are healthy (e.g. tests) |
+| `SyncFail` | only when the sync operation fails |
+| `Skip` | tells Argo CD NOT to apply this manifest |
+
+| Hook delete policy | Hook resource deleted… |
+|--------------------|------------------------|
+| `HookSucceeded` | after the hook completes successfully |
+| `HookFailed` | after the hook fails |
+| `BeforeHookCreation` | right before a new run creates it (keeps last run for debugging) |
+
+## Per-resource sync controls (annotations on the manifest)
+
+```yaml
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false   # Never prune this resource.
+    # Other options: Delete=false, SkipDryRunOnMissingResource=true,
+    #                Validate=false, ServerSideApply=true
+    argocd.argoproj.io/compare-options: IgnoreExtraneous  # Don't flag as OutOfSync if extra.
+```
+
+## Selective / partial sync
+
+```bash
+# Sync only specific resources instead of the whole app:
+argocd app sync web-app --resource apps:Deployment:web
+
+# Preview without applying:
+argocd app sync web-app --dry-run
+
+# Force replace + prune:
+argocd app sync web-app --replace --prune
+```
+
+## Quick reference
+
+| Concept | Where it lives | Purpose |
+|---------|----------------|---------|
+| Manual sync | trigger via UI/CLI/API | human-reviewed apply |
+| Automated sync | `syncPolicy.automated` | auto-apply on drift |
+| `prune` | `syncPolicy.automated` | delete resources gone from Git |
+| `selfHeal` | `syncPolicy.automated` | revert manual cluster edits |
+| `retry` | `syncPolicy.retry` | retry failed syncs with backoff |
+| Sync phases | hook annotation | PreSync → Sync → PostSync (+ SyncFail) |
+| Sync waves | `sync-wave` annotation | ordering within a phase (ascending) |
+| Hooks | `hook` annotation | run Jobs at a phase |
+| Hook cleanup | `hook-delete-policy` annotation | when to delete the hook |
+| Sync options | `syncPolicy.syncOptions` or per-resource | CreateNamespace, PruneLast, Replace, etc. |
+
 ## Exam-relevant points
 
-1. **GitOps + pull-based.** Git is the source of truth; the in-cluster agent
-   pulls and reconciles. This is the defining contrast with push-based CI/CD.
-2. **Sync status ≠ health status.** They're independent; know the difference and
-   the values each can take.
-3. **`prune` vs `selfHeal`.** `prune` removes resources deleted from Git;
-   `selfHeal` reverts manual live changes. Both belong to `syncPolicy.automated`.
-4. **Application = source + destination.** Source (repoURL/path/targetRevision)
-   declares *what*; destination (server/name + namespace) declares *where*.
-5. **AppProject = guardrails.** Restricts allowed repos, destinations, and
-   resource kinds — the multi-tenancy boundary.
-6. **Who generates manifests?** The **Repository Server** (running Helm/Kustomize),
-   not the controller. The **Application Controller** does the reconciling.
+1. **Manual vs automated, and the two flags.** `prune` = delete-on-removal,
+   `selfHeal` = revert-manual-edits. Both are under `syncPolicy.automated`.
+2. **Phases vs waves are different axes.** Phases = PreSync/Sync/PostSync/SyncFail
+   (coarse). Waves = ascending ordering *within* a phase. Phase wins first.
+3. **Hooks attach to phases.** PreSync for migrations, PostSync for tests; the
+   GitOps-native alternative to Helm hooks. `hook-delete-policy` controls cleanup.
+4. **Automated sync doesn't retry by default.** Add a `retry` block for backoff.
+5. **`PruneLast` and `Prune=false`.** `PruneLast` defers pruning until after a
+   successful sync; the per-resource `Prune=false` annotation exempts a resource.
