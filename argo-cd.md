@@ -294,3 +294,203 @@ argocd app sync web-app --replace --prune
    successful sync; the per-resource `Prune=false` annotation exempts a resource.
 
 
+# Use Argo CD Application (and ApplicationSets) — Annotated Example
+
+The fundamentals doc introduced the `Application` object. This one covers how
+you actually *use* it: the different **source tool types**, scaling to many apps
+with **App-of-Apps** and **ApplicationSets**, and the **generators** that make
+ApplicationSets powerful.
+
+## Source tool types (auto-detected by Argo CD)
+
+One `Application`, but `source` differs by tool. Argo CD inspects the repo path
+and picks the right one automatically.
+
+```yaml
+# ---- (a) Plain directory of manifests ----
+source:
+  repoURL: https://github.com/example/app.git
+  targetRevision: main
+  path: manifests
+  directory:
+    recurse: true                    # Include manifests in subfolders.
+
+# ---- (b) Helm chart ----
+source:
+  repoURL: https://github.com/example/app.git
+  targetRevision: main
+  path: chart
+  helm:
+    releaseName: web
+    valueFiles:
+      - values-prod.yaml
+    parameters:                      # Override individual chart values.
+      - name: image.tag
+        value: "1.8.0"
+    # values: |                      # Inline values block (alternative to files).
+    #   replicaCount: 3
+
+# ---- (c) Kustomize overlay ----
+source:
+  repoURL: https://github.com/example/app.git
+  targetRevision: main
+  path: overlays/prod
+  kustomize:
+    namePrefix: prod-
+    images:
+      - example/web:1.8.0            # Override image tags.
+
+# ---- (d) Helm chart from a Helm REPO (not Git) ----
+source:
+  repoURL: https://charts.bitnami.com/bitnami
+  chart: nginx                       # `chart:` instead of `path:` for a Helm repo.
+  targetRevision: 15.0.0             # Chart version.
+```
+
+## Multi-source Application
+
+Pull manifests from one repo and Helm values from another (common for separating
+config from charts). `$ref` lets one source reference another.
+
+```yaml
+spec:
+  sources:
+    - repoURL: https://github.com/example/charts.git
+      targetRevision: main
+      path: charts/web
+      helm:
+        valueFiles:
+          - $values/envs/prod/values.yaml    # pulled from the ref below
+    - repoURL: https://github.com/example/config.git
+      targetRevision: main
+      ref: values                            # named reference used above
+```
+
+## Useful Application fields
+
+```yaml
+metadata:
+  finalizers:
+    # Cascading delete: removing the Application also prunes its live resources.
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # Tolerate fields mutated at runtime so the app doesn't show OutOfSync forever.
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas                       # e.g. ignore HPA-managed replica count
+  revisionHistoryLimit: 10                      # How many past syncs to keep for rollback.
+```
+
+## Scaling pattern 1: App-of-Apps (older)
+
+One parent Application whose Git source contains *other Application manifests*.
+Syncing the parent creates the children.
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bootstrap                    # The "root" app.
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/example/cluster-apps.git
+    targetRevision: main
+    path: apps                       # This folder holds child Application YAMLs.
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+```
+
+## Scaling pattern 2: ApplicationSet (modern, preferred)
+
+An `ApplicationSet` **templates** Applications from a **generator**. One object →
+many Applications.
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: web-per-env
+  namespace: argocd
+spec:
+  goTemplate: true                   # Use Go templating in the template block.
+  generators:
+    # LIST generator: one Application per listed element.
+    - list:
+        elements:
+          - env: dev
+            cluster: https://kubernetes.default.svc
+          - env: prod
+            cluster: https://prod-cluster.example.com
+  template:                          # Rendered once per generated element.
+    metadata:
+      name: 'web-{{.env}}'           # Values come from the generator element.
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/example/app.git
+        targetRevision: main
+        path: 'overlays/{{.env}}'
+      destination:
+        server: '{{.cluster}}'
+        namespace: 'web-{{.env}}'
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+```
+
+## ApplicationSet generators (know these)
+
+| Generator | Produces one Application per… | Typical use |
+|-----------|-------------------------------|-------------|
+| **List** | hardcoded element | small fixed set of envs/clusters |
+| **Cluster** | cluster registered in Argo CD | deploy an app to every cluster |
+| **Git (directories)** | directory in a repo | folder-per-microservice |
+| **Git (files)** | config file in a repo | values-file-per-environment |
+| **Matrix** | combination of two generators | every app × every cluster |
+| **Merge** | merged/overlaid generators | base list + per-item overrides |
+| **SCM Provider** | repo in a GitHub/GitLab org | onboard every repo automatically |
+| **Pull Request** | open pull request | ephemeral PR preview environments |
+
+```yaml
+# Example: Git directories generator (one app per folder under apps/)
+  generators:
+    - git:
+        repoURL: https://github.com/example/monorepo.git
+        revision: main
+        directories:
+          - path: apps/*             # each match becomes {{.path.basename}}
+```
+
+## Quick reference
+
+| Concept | Object / field | Purpose |
+|---------|----------------|---------|
+| Manifest source | `source` / `sources` | Where + how to get desired state |
+| Helm config | `source.helm` | valueFiles, parameters, releaseName |
+| Kustomize config | `source.kustomize` | namePrefix, images, common labels |
+| Multi-source | `spec.sources` + `ref`/`$ref` | combine chart + external values |
+| Cascading delete | `resources-finalizer...` finalizer | prune resources when app deleted |
+| Drift tolerance | `ignoreDifferences` | ignore runtime-mutated fields |
+| Many apps (old) | App-of-Apps (parent Application) | parent syncs child Applications |
+| Many apps (new) | `ApplicationSet` + generators | template N apps from parameters |
+
+## Exam-relevant points
+
+1. **Source type is auto-detected.** Directory, Helm, Kustomize, Jsonnet — same
+   Application, different `source` sub-block. `chart:` (Helm repo) vs `path:` (Git).
+2. **App-of-Apps vs ApplicationSet.** Both scale to many apps; App-of-Apps nests
+   Application manifests in Git, ApplicationSet *templates* them from generators
+   (the modern, preferred approach).
+3. **Know the generators.** Especially List, Cluster, Git (dirs/files), and Matrix.
+   Pull Request = ephemeral preview envs; SCM Provider = per-repo onboarding.
+4. **The finalizer enables cascading delete.** Without
+   `resources-finalizer.argocd.argoproj.io`, deleting an Application leaves its
+   resources running.
+5. **Multi-source apps** combine a chart from one repo with values from another
+   via a named `ref`.
