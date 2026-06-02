@@ -271,7 +271,7 @@ be literals or pulled from the live object via `valueFrom.fieldRef`
 
 ---
 
-# Exam-relevant points (all three subtopics)
+# Exam-relevant points
 
 1. **Rollout replaces Deployment** and differs only by the `strategy` block;
    it manages ReplicaSets and can wrap an existing Deployment via `workloadRef`.

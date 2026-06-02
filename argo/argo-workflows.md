@@ -1,8 +1,16 @@
-# Certified Argo Project Associate
+# Argo Workflows — CAPA Study Notes
 
-## Argo Workflows
+Covers the six exam subtopics:
+1. Argo Workflow Fundamentals
+2. Generating and Consuming Artifacts
+3. Understand Argo Workflow Templates
+4. Argo Workflow Spec
+5. Work with DAG (Directed-Acyclic Graphs)
+6. Run Data Processing Jobs with Argo Workflows
 
-### Argo Workflow fundamentals
+---
+
+# 1) Argo Workflow Fundamentals
 
 - Argo Workflows is implemented as a Kubernetes CRD
 - The `Workflow` is a live object
@@ -13,7 +21,9 @@
 
 <img width="650" height="308" alt="image" src="https://github.com/user-attachments/assets/6aa1776f-23bb-49f0-99e3-94139ab54f8f" />
 
-### Generating and Consuming Artifacts
+---
+
+# 2) Generating and Consuming Artifacts
 
 - There are two ways to pass data between steps:
 
@@ -106,7 +116,9 @@ inputs:
         fromExpression: "steps['flip-coin'].outputs.result == 'heads' ? steps.heads.outputs.artifacts.headsresult : steps.tails.outputs.artifacts.tailsresult" # Artifacts condition
 ```
 
-### Understand Argo Workflow Templates
+---
+
+# 3) Understand Argo Workflow Templates
 
 - Argo Workflows is using `spec.templates` to define 9 different types of templates:
 
@@ -123,7 +135,9 @@ inputs:
 | `containerSet` | Worker | Yes (shared pod) | `containerSet:` | Multiple containers with dependencies in one pod |
 
 
-### Argo Workflow Spec
+---
+
+# 4) Argo Workflow Spec
 
 
 This is a single, self-contained `Workflow` that exercises the parts of the
@@ -244,7 +258,7 @@ spec:
         args: ["echo 'workflow finished with status: {{workflow.status}}'"]
 ```
 
-#### Quick anatomy reference
+## Quick anatomy reference
 
 | Area | Field(s) | What it does |
 |------|----------|--------------|
@@ -257,7 +271,7 @@ spec:
 | Data flow | `inputs`, `outputs`, `arguments` | Pass parameters (strings) and artifacts (files/dirs) between steps |
 | Substitution | `{{...}}` | Reference params, step outputs, and built-in globals like `{{workflow.status}}` |
 
-#### The two distinctions examiners probe most
+## The two distinctions examiners probe most
 
 1. **Orchestrator vs worker template.** Reading a manifest, you should instantly
    tell whether a template *runs* something (`container`/`script`) or *coordinates*
@@ -275,7 +289,9 @@ spec:
 > `dependencies:` between tasks.
 
 
-### Work with DAG (Directed-Acyclic Graphs)
+---
+
+# 5) Work with DAG (Directed-Acyclic Graphs)
 
 A `dag` template is an **orchestrator**: it lists *tasks* and the *dependencies*
 between them, then Argo runs each task as soon as its dependencies finish.
@@ -380,7 +396,7 @@ spec:
               path: /tmp/r.txt
 ```
 
-#### Fan-out variant (loops over a DAG task)
+## Fan-out variant (loops over a DAG task)
 
 A single task can expand into parallel instances with `withItems` / `withParam`
 / `withSequence` — a common way to process a list concurrently inside a DAG.
@@ -399,7 +415,7 @@ A single task can expand into parallel instances with `withItems` / `withParam`
               - gamma
 ```
 
-#### Quick reference
+## Quick reference
 
 | Field | Purpose |
 |-------|---------|
@@ -414,7 +430,7 @@ A single task can expand into parallel instances with `withItems` / `withParam`
 | `dag.failFast` | `false` keeps independent branches running after a failure |
 | `dag.target` | Run only a named subset of the graph |
 
-#### Result qualifiers for `depends`
+## Result qualifiers for `depends`
 
 | Qualifier | True when the upstream task… |
 |-----------|------------------------------|
@@ -429,14 +445,15 @@ A single task can expand into parallel instances with `withItems` / `withParam`
 > `(A.Succeeded || A.Skipped || A.Daemoned)`. Spell out a qualifier when you
 > need different behavior, such as the `A.Failed` fallback branch above.
 
-### Run Data Processing Jobs with Argo Workflows — Annotated Example
+---
+
+# 6) Run Data Processing Jobs with Argo Workflows
 
 Argo was built to orchestrate **parallel, compute-intensive jobs** (data/batch
 processing, ML pipelines) on Kubernetes. This domain is mostly about combining
 features you've already seen into the canonical **split → map → reduce** pattern,
 plus the knobs that keep big jobs efficient and resilient.
 
-> [!NOTE]
 > **Split → Map → Reduce** — a large input is **split** into independent chunks, the same operation is **mapped** over each chunk in parallel, and the per-chunk results are **reduced** into the final answer. The chunks are independent, so the map phase scales across many workers — which is why it fits batch data and ML pipelines.
 
 Key ideas:
@@ -568,7 +585,7 @@ spec:
           print("aggregated total =", total)
 ```
 
-#### Moving real data: artifacts, not parameters
+## Moving real data: artifacts, not parameters
 
 Parameters are for small strings. Real datasets travel as **artifacts**, backed
 by an artifact repository (S3, GCS, Azure Blob, MinIO, etc.). Pattern:
@@ -588,7 +605,7 @@ by an artifact repository (S3, GCS, Azure Blob, MinIO, etc.). Pattern:
           path: /data/input.csv
 ```
 
-#### Shared scratch storage (large intermediate data)
+## Shared scratch storage (large intermediate data)
 
 For steps that need a shared disk rather than file-by-file artifact passing:
 
@@ -603,7 +620,7 @@ spec:
   # volumeMounts: [ { name: workdir, mountPath: /work } ]
 ```
 
-#### Quick reference
+## Quick reference
 
 | Feature | Field | Use in data jobs |
 |---------|-------|------------------|
@@ -618,7 +635,9 @@ spec:
 | Large data | `inputs/outputs.artifacts` | Move files via the artifact repository |
 | Shared disk | `volumeClaimTemplates` | Provision a PVC for intermediate data |
 
-#### Exam-relevant points
+---
+
+# Exam-relevant points
 
 1. **`withItems` vs `withParam`.** Static list vs runtime-generated list. Data
    pipelines almost always need `withParam` because the partition count isn't

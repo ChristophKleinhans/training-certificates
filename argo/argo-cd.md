@@ -1,4 +1,15 @@
-# Understand Argo CD Fundamentals — Annotated Example
+# Argo CD — CAPA Study Notes
+
+Covers the five exam subtopics:
+1. Understand Argo CD Fundamentals
+2. Synchronize Applications Using Argo CD
+3. Use Argo CD Application (and ApplicationSets)
+4. Configure Argo CD with Helm and Kustomize
+5. Identify Common Reconciliation Patterns
+
+---
+
+# 1) Understand Argo CD Fundamentals
 
 Argo CD is a **declarative, GitOps continuous delivery** tool for Kubernetes
 (a CNCF graduated project). Where Argo Workflows *runs jobs to completion*,
@@ -117,7 +128,9 @@ spec:
       kind: Namespace
 ```
 
-# Synchronize Applications Using Argo CD — Annotated Example
+---
+
+# 2) Synchronize Applications Using Argo CD
 
 A **sync** is the operation that applies Git's desired state to the cluster,
 moving live state toward target. This domain is about *how* sync runs, *when*
@@ -281,20 +294,9 @@ argocd app sync web-app --replace --prune
 | Hook cleanup | `hook-delete-policy` annotation | when to delete the hook |
 | Sync options | `syncPolicy.syncOptions` or per-resource | CreateNamespace, PruneLast, Replace, etc. |
 
-## Exam-relevant points
+---
 
-1. **Manual vs automated, and the two flags.** `prune` = delete-on-removal,
-   `selfHeal` = revert-manual-edits. Both are under `syncPolicy.automated`.
-2. **Phases vs waves are different axes.** Phases = PreSync/Sync/PostSync/SyncFail
-   (coarse). Waves = ascending ordering *within* a phase. Phase wins first.
-3. **Hooks attach to phases.** PreSync for migrations, PostSync for tests; the
-   GitOps-native alternative to Helm hooks. `hook-delete-policy` controls cleanup.
-4. **Automated sync doesn't retry by default.** Add a `retry` block for backoff.
-5. **`PruneLast` and `Prune=false`.** `PruneLast` defers pruning until after a
-   successful sync; the per-resource `Prune=false` annotation exempts a resource.
-
-
-# Use Argo CD Application (and ApplicationSets) — Annotated Example
+# 3) Use Argo CD Application (and ApplicationSets)
 
 The fundamentals doc introduced the `Application` object. This one covers how
 you actually *use* it: the different **source tool types**, scaling to many apps
@@ -480,22 +482,9 @@ spec:
 | Many apps (old) | App-of-Apps (parent Application) | parent syncs child Applications |
 | Many apps (new) | `ApplicationSet` + generators | template N apps from parameters |
 
-## Exam-relevant points
+---
 
-1. **Source type is auto-detected.** Directory, Helm, Kustomize, Jsonnet — same
-   Application, different `source` sub-block. `chart:` (Helm repo) vs `path:` (Git).
-2. **App-of-Apps vs ApplicationSet.** Both scale to many apps; App-of-Apps nests
-   Application manifests in Git, ApplicationSet *templates* them from generators
-   (the modern, preferred approach).
-3. **Know the generators.** Especially List, Cluster, Git (dirs/files), and Matrix.
-   Pull Request = ephemeral preview envs; SCM Provider = per-repo onboarding.
-4. **The finalizer enables cascading delete.** Without
-   `resources-finalizer.argocd.argoproj.io`, deleting an Application leaves its
-   resources running.
-5. **Multi-source apps** combine a chart from one repo with values from another
-   via a named `ref`.
-
-# Configure Argo CD with Helm and Kustomize — Annotated Example
+# 4) Configure Argo CD with Helm and Kustomize
 
 Argo CD natively supports **Helm** and **Kustomize** as config-management tools.
 The critical thing to understand is *how* Argo CD drives them — it differs from
@@ -652,21 +641,9 @@ Available to Helm parameter substitution, Kustomize, and plugins:
 | Chart from registry | `chart:` + version in `targetRevision` | n/a |
 | Skip CRDs | `skipCrds: true` | n/a |
 
-## Exam-relevant points
+---
 
-1. **`helm template`, not `helm install`.** No Tiller, no release object, no
-   `helm list`/`helm rollback`. Helm is just a renderer; Argo CD applies the YAML.
-2. **Helm hooks ≠ helm-managed here.** Argo CD maps common Helm hooks onto its own
-   sync hooks; they don't execute through a Helm release lifecycle.
-3. **`path:` vs `chart:`.** `path:` = chart in Git; `chart:` = chart from a Helm
-   repo/OCI registry, with `targetRevision` meaning the chart version.
-4. **Kustomize overlays declaratively.** `images`, `namePrefix`, `replicas`,
-   `commonLabels`, `patches` — all expressible in the `kustomize` block.
-5. **CMP for everything else.** A plugin sidecar lets Argo CD apply any tool's
-   stdout manifests (helmfile, jsonnet, cdk8s, …).
-6. **Build env vars** like `ARGOCD_APP_NAME` are usable in parameters and plugins.
-
-# Identify Common Reconciliation Patterns — Annotated Notes
+# 5) Identify Common Reconciliation Patterns
 
 Reconciliation is the controller pattern underneath the *entire* Argo ecosystem.
 Once you recognize it, Argo CD, Rollouts, and Workflows all look like the same
@@ -762,16 +739,50 @@ spec:
   this is the safety net that makes the system level-triggered (catches anything
   a watch missed). In Argo CD this is the app reconciliation interval.
 
-## Exam-relevant points
+---
 
-1. **Reconciliation loop = observe → diff → act, repeated forever.** Drive actual
+# Exam-relevant points
+
+1. **Manual vs automated, and the two flags.** `prune` = delete-on-removal,
+   `selfHeal` = revert-manual-edits. Both are under `syncPolicy.automated`.
+2. **Phases vs waves are different axes.** Phases = PreSync/Sync/PostSync/SyncFail
+   (coarse). Waves = ascending ordering *within* a phase. Phase wins first.
+3. **Hooks attach to phases.** PreSync for migrations, PostSync for tests; the
+   GitOps-native alternative to Helm hooks. `hook-delete-policy` controls cleanup.
+4. **Automated sync doesn't retry by default.** Add a `retry` block for backoff.
+5. **`PruneLast` and `Prune=false`.** `PruneLast` defers pruning until after a
+   successful sync; the per-resource `Prune=false` annotation exempts a resource.
+6. **Source type is auto-detected.** Directory, Helm, Kustomize, Jsonnet — same
+   Application, different `source` sub-block. `chart:` (Helm repo) vs `path:` (Git).
+7. **App-of-Apps vs ApplicationSet.** Both scale to many apps; App-of-Apps nests
+   Application manifests in Git, ApplicationSet *templates* them from generators
+   (the modern, preferred approach).
+8. **Know the generators.** Especially List, Cluster, Git (dirs/files), and Matrix.
+   Pull Request = ephemeral preview envs; SCM Provider = per-repo onboarding.
+9. **The finalizer enables cascading delete.** Without
+   `resources-finalizer.argocd.argoproj.io`, deleting an Application leaves its
+   resources running.
+10. **Multi-source apps** combine a chart from one repo with values from another
+   via a named `ref`.
+11. **`helm template`, not `helm install`.** No Tiller, no release object, no
+   `helm list`/`helm rollback`. Helm is just a renderer; Argo CD applies the YAML.
+12. **Helm hooks ≠ helm-managed here.** Argo CD maps common Helm hooks onto its own
+   sync hooks; they don't execute through a Helm release lifecycle.
+13. **`path:` vs `chart:`.** `path:` = chart in Git; `chart:` = chart from a Helm
+   repo/OCI registry, with `targetRevision` meaning the chart version.
+14. **Kustomize overlays declaratively.** `images`, `namePrefix`, `replicas`,
+   `commonLabels`, `patches` — all expressible in the `kustomize` block.
+15. **CMP for everything else.** A plugin sidecar lets Argo CD apply any tool's
+   stdout manifests (helmfile, jsonnet, cdk8s, …).
+16. **Build env vars** like `ARGOCD_APP_NAME` are usable in parameters and plugins.
+17. **Reconciliation loop = observe → diff → act, repeated forever.** Drive actual
    state toward declared desired state and hold it there.
-2. **Level-triggered, not edge-triggered.** React to *state*, not *events*; this
+18. **Level-triggered, not edge-triggered.** React to *state*, not *events*; this
    is what makes Argo controllers self-healing and resilient to missed signals.
-3. **Idempotency + eventual consistency.** Re-running is safe; the system
+19. **Idempotency + eventual consistency.** Re-running is safe; the system
    converges over repeated loops rather than in one shot.
-4. **Self-heal vs prune.** Self-heal corrects drift back to desired; prune removes
+20. **Self-heal vs prune.** Self-heal corrects drift back to desired; prune removes
    what's no longer desired — both are the reconcile loop acting.
-5. **Argo Events is the exception** — event/edge-driven, not a level loop.
-6. **Owner references** drive cascading deletion; **finalizers** gate deletion to
+21. **Argo Events is the exception** — event/edge-driven, not a level loop.
+22. **Owner references** drive cascading deletion; **finalizers** gate deletion to
    allow cleanup first.
