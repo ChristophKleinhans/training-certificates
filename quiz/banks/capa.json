@@ -1,0 +1,1353 @@
+{
+  "title": "Certified Argo Project Associate (CAPA)",
+  "cert": "CAPA",
+  "timeLimitMinutes": 90,
+  "passingScore": 75,
+  "version": "2026.06",
+  "questions": [
+    {
+      "id": "cd-01",
+      "type": "single",
+      "category": "Argo CD · Fundamentals",
+      "stem": "Which statement best describes Argo CD?",
+      "options": [
+        "A declarative, GitOps continuous delivery tool for Kubernetes",
+        "A CI server that builds and pushes container images on each commit",
+        "A service mesh for traffic management between microservices",
+        "A batch workflow engine that runs jobs to completion"
+      ],
+      "answer": 0,
+      "explanation": "Argo CD is a declarative, GitOps continuous delivery tool (a CNCF graduated project). Running jobs to completion describes Argo Workflows."
+    },
+    {
+      "id": "cd-02",
+      "type": "single",
+      "category": "Argo CD · Fundamentals",
+      "stem": "In Argo CD's GitOps model, what is the single source of truth for the desired cluster state?",
+      "options": [
+        "A Git repository",
+        "The live state of the cluster",
+        "The Redis cache",
+        "The Application controller's in-memory state"
+      ],
+      "answer": 0,
+      "explanation": "Git holds the desired state; Argo CD continuously reconciles the live cluster toward what Git declares."
+    },
+    {
+      "id": "cd-03",
+      "type": "single",
+      "category": "Argo CD · Fundamentals",
+      "stem": "What distinguishes Argo CD's pull-based model from traditional push-based CI/CD?",
+      "options": [
+        "An agent runs inside the cluster and pulls the desired state from Git",
+        "A pipeline outside the cluster runs `kubectl apply`",
+        "The kubelet pulls manifests directly from the API server",
+        "Developers apply manifests to the cluster by hand"
+      ],
+      "answer": 0,
+      "explanation": "Pull-based means an in-cluster agent pulls from Git, versus push-based CI/CD that runs `kubectl apply` from outside."
+    },
+    {
+      "id": "cd-04",
+      "type": "multi",
+      "category": "Argo CD · Fundamentals",
+      "stem": "Argo CD tracks two independent statuses for each Application. Which two? (Select all that apply.)",
+      "options": [
+        "Sync status",
+        "Health status",
+        "Build status",
+        "Billing status"
+      ],
+      "answer": [0, 1],
+      "explanation": "Sync status answers 'does live match Git?' and health status answers 'are the resources actually working?'. They are reported independently."
+    },
+    {
+      "id": "cd-05",
+      "type": "single",
+      "category": "Argo CD · Fundamentals",
+      "stem": "An Application shows `Synced` + `Degraded`. What does that most likely mean?",
+      "options": [
+        "Git applied correctly, but the running workloads are unhealthy (e.g. crash-looping)",
+        "The cluster has drifted from Git and the change has not been applied",
+        "Everything matches Git and is healthy",
+        "Argo CD cannot reach the Git repository"
+      ],
+      "answer": 0,
+      "explanation": "`Synced` means live matches Git; `Degraded` means the resources are not healthy — e.g. pods are crash-looping despite a correct apply."
+    },
+    {
+      "id": "cd-06",
+      "type": "single",
+      "category": "Argo CD · Fundamentals",
+      "stem": "What does a `Refresh` do, in contrast to a `Sync`?",
+      "options": [
+        "Re-reads Git and recomputes the diff, without changing the cluster",
+        "Applies manifests to move the live state toward the target",
+        "Deletes resources that were removed from Git",
+        "Reverts manual cluster edits back to Git"
+      ],
+      "answer": 0,
+      "explanation": "Refresh only re-reads Git and recomputes the diff. Sync is what actually applies manifests to the cluster."
+    },
+    {
+      "id": "cd-07",
+      "type": "single",
+      "category": "Argo CD · Fundamentals",
+      "stem": "What does an `AppProject` provide in Argo CD?",
+      "options": [
+        "Guardrails for a set of Applications (allowed source repos, destinations, resource kinds) — the basis for multi-tenancy",
+        "A templating engine that generates many Applications",
+        "A publish/subscribe transport for events",
+        "A reusable definition of metric-based analysis"
+      ],
+      "answer": 0,
+      "explanation": "An AppProject constrains which repos, destinations, and resource kinds its Applications may use — the foundation of multi-tenancy."
+    },
+    {
+      "id": "cd-08",
+      "type": "single",
+      "category": "Argo CD · Synchronization",
+      "stem": "How do you configure an Application for MANUAL sync?",
+      "options": [
+        "Omit the `syncPolicy.automated` block entirely",
+        "Set `syncPolicy.automated.manual: true`",
+        "Set `prune: false`",
+        "Remove the `source` field"
+      ],
+      "answer": 0,
+      "explanation": "Automated sync is enabled by the presence of `syncPolicy.automated`. Leaving that block out makes sync manual (triggered via UI/CLI/API)."
+    },
+    {
+      "id": "cd-09",
+      "type": "multi",
+      "category": "Argo CD · Synchronization",
+      "stem": "Which fields live under `syncPolicy.automated` and control automated sync behavior? (Select all that apply.)",
+      "options": [
+        "`prune`",
+        "`selfHeal`",
+        "`allowEmpty`",
+        "`setWeight`"
+      ],
+      "answer": [0, 1, 2],
+      "explanation": "`prune`, `selfHeal`, and `allowEmpty` are automated-sync controls. `setWeight` is an Argo Rollouts canary step, not an Argo CD field."
+    },
+    {
+      "id": "cd-10",
+      "type": "single",
+      "category": "Argo CD · Synchronization",
+      "stem": "What does `prune: true` do in an automated sync policy?",
+      "options": [
+        "Deletes live resources that were removed from Git",
+        "Reverts manual cluster changes back to Git",
+        "Skips resources already marked Synced",
+        "Creates the destination namespace if missing"
+      ],
+      "answer": 0,
+      "explanation": "Prune removes resources from the cluster once they are deleted from Git. Reverting manual edits is `selfHeal`."
+    },
+    {
+      "id": "cd-11",
+      "type": "single",
+      "category": "Argo CD · Synchronization",
+      "stem": "What does `selfHeal: true` do?",
+      "options": [
+        "Reverts manual changes made directly in the cluster back to Git's declared state",
+        "Deletes resources no longer present in Git",
+        "Retries a failed sync with backoff",
+        "Validates manifests before applying them"
+      ],
+      "answer": 0,
+      "explanation": "Self-heal corrects drift: it reverts out-of-band cluster edits back to what Git declares. Deleting removed resources is `prune`."
+    },
+    {
+      "id": "cd-12",
+      "type": "single",
+      "category": "Argo CD · Synchronization",
+      "stem": "Does automated sync retry failed syncs by default?",
+      "options": [
+        "No — you must add a `retry` block for it to retry with backoff",
+        "Yes — it retries indefinitely by default",
+        "Yes — it retries exactly three times by default",
+        "No — automated sync can never be made to retry"
+      ],
+      "answer": 0,
+      "explanation": "Automated sync does not retry on its own; add a `syncPolicy.retry` block (limit + backoff) to enable retries."
+    },
+    {
+      "id": "cd-13",
+      "type": "single",
+      "category": "Argo CD · Synchronization",
+      "stem": "What is the correct order of Argo CD sync phases?",
+      "options": [
+        "PreSync → Sync → PostSync (with SyncFail on failure)",
+        "Sync → PreSync → PostSync",
+        "PostSync → Sync → PreSync",
+        "PreSync → PostSync → Sync"
+      ],
+      "answer": 0,
+      "explanation": "PreSync runs before the main apply, Sync applies the manifests, PostSync runs after they are healthy, and SyncFail runs only if the sync fails."
+    },
+    {
+      "id": "cd-14",
+      "type": "single",
+      "category": "Argo CD · Synchronization",
+      "stem": "How do sync waves order resources?",
+      "options": [
+        "Resources are applied in ascending wave order, waiting for each wave to become healthy before the next",
+        "Resources are applied in descending wave order",
+        "All waves are applied simultaneously",
+        "Waves override phases entirely"
+      ],
+      "answer": 0,
+      "explanation": "Waves order resources within a phase: ascending order (negatives first, default 0), each wave waited on for health before the next."
+    },
+    {
+      "id": "cd-15",
+      "type": "single",
+      "category": "Argo CD · Synchronization",
+      "stem": "When both apply, which takes precedence — sync phase or sync wave?",
+      "options": [
+        "Phase first, then wave within the phase",
+        "Wave first, then phase",
+        "They are the same mechanism",
+        "Whichever has the lower number, regardless of type"
+      ],
+      "answer": 0,
+      "explanation": "Ordering is phase first, then wave within that phase, then by kind/name. A PostSync resource always runs after every Sync-phase wave."
+    },
+    {
+      "id": "cd-16",
+      "type": "single",
+      "category": "Argo CD · Synchronization",
+      "stem": "A database migration Job must run before the main manifests are applied. Which hook phase fits?",
+      "options": [
+        "PreSync",
+        "PostSync",
+        "SyncFail",
+        "Skip"
+      ],
+      "answer": 0,
+      "explanation": "PreSync hooks run before the main apply — the canonical place for schema/DB migrations. PostSync is for things like smoke tests after the app is healthy."
+    },
+    {
+      "id": "cd-17",
+      "type": "single",
+      "category": "Argo CD · Synchronization",
+      "stem": "What does the `PruneLast=true` sync option do?",
+      "options": [
+        "Defers pruning until after the other resources have synced successfully",
+        "Prunes resources before applying anything else",
+        "Disables pruning entirely",
+        "Prunes only CRDs"
+      ],
+      "answer": 0,
+      "explanation": "PruneLast holds back deletions until the rest of the sync succeeds, reducing the risk of removing something still depended on."
+    },
+    {
+      "id": "cd-18",
+      "type": "single",
+      "category": "Argo CD · Applications & ApplicationSets",
+      "stem": "How does Argo CD decide whether a source is plain manifests, Helm, or Kustomize?",
+      "options": [
+        "It auto-detects the type by inspecting the repo path",
+        "You must set `source.type` explicitly",
+        "It always assumes Helm unless told otherwise",
+        "It prompts the user at sync time"
+      ],
+      "answer": 0,
+      "explanation": "Argo CD inspects the source path and auto-detects directory/Helm/Kustomize/Jsonnet; you only add a tool-specific sub-block to configure it."
+    },
+    {
+      "id": "cd-19",
+      "type": "single",
+      "category": "Argo CD · Applications & ApplicationSets",
+      "stem": "In an Application `source`, what distinguishes pulling a Helm chart from a Helm repo versus from Git?",
+      "options": [
+        "`chart:` (with `targetRevision` as the chart version) signals a Helm repo; `path:` points to a chart directory in Git",
+        "`path:` is for Helm repos; `chart:` is for Git",
+        "Both `chart:` and `path:` must be set together",
+        "There is no difference between them"
+      ],
+      "answer": 0,
+      "explanation": "`chart:` plus a version in `targetRevision` pulls from a Helm/OCI repo; `path:` points at a chart or manifests directory inside a Git repo."
+    },
+    {
+      "id": "cd-20",
+      "type": "single",
+      "category": "Argo CD · Applications & ApplicationSets",
+      "stem": "What is the App-of-Apps pattern?",
+      "options": [
+        "A parent Application whose Git source contains other Application manifests; syncing the parent creates the children",
+        "An ApplicationSet that uses the Cluster generator",
+        "A single Application that deploys to multiple namespaces",
+        "Two Applications sharing one AppProject"
+      ],
+      "answer": 0,
+      "explanation": "App-of-Apps nests child Application manifests in a Git folder under a root Application. It is the older scaling approach; ApplicationSet is the modern one."
+    },
+    {
+      "id": "cd-21",
+      "type": "single",
+      "category": "Argo CD · Applications & ApplicationSets",
+      "stem": "What does an `ApplicationSet` do?",
+      "options": [
+        "Templates many Applications from a generator (one object produces many Applications)",
+        "Groups Applications for RBAC purposes only",
+        "Stores Helm values centrally for reuse",
+        "Runs analysis to gate a deployment"
+      ],
+      "answer": 0,
+      "explanation": "An ApplicationSet uses a generator to template N Applications from parameters — the preferred way to scale to many apps/clusters/envs."
+    },
+    {
+      "id": "cd-22",
+      "type": "multi",
+      "category": "Argo CD · Applications & ApplicationSets",
+      "stem": "Which of the following are valid ApplicationSet generators? (Select all that apply.)",
+      "options": [
+        "List",
+        "Cluster",
+        "Git (directories/files)",
+        "Pull Request"
+      ],
+      "answer": [0, 1, 2, 3],
+      "explanation": "All four are real generators. Others include Matrix, Merge, and SCM Provider."
+    },
+    {
+      "id": "cd-23",
+      "type": "single",
+      "category": "Argo CD · Applications & ApplicationSets",
+      "stem": "Which ApplicationSet generator produces one Application per combination of two other generators (e.g. every app × every cluster)?",
+      "options": [
+        "Matrix",
+        "List",
+        "SCM Provider",
+        "Merge"
+      ],
+      "answer": 0,
+      "explanation": "The Matrix generator takes the cross-product of two child generators. Merge overlays generators; SCM Provider onboards repos in an org."
+    },
+    {
+      "id": "cd-24",
+      "type": "single",
+      "category": "Argo CD · Applications & ApplicationSets",
+      "stem": "Which feature ensures that deleting an Application also prunes its live resources?",
+      "options": [
+        "The `resources-finalizer.argocd.argoproj.io` finalizer",
+        "Setting `prune: true` in the sync policy",
+        "The `ignoreDifferences` field",
+        "A PostSync hook"
+      ],
+      "answer": 0,
+      "explanation": "Without that finalizer, deleting the Application leaves its resources running. The finalizer enables a cascading delete of the app's resources."
+    },
+    {
+      "id": "cd-25",
+      "type": "single",
+      "category": "Argo CD · Helm & Kustomize",
+      "stem": "How does Argo CD use Helm to deploy a chart?",
+      "options": [
+        "It runs `helm template` and applies the rendered YAML — no `helm install`, no release object",
+        "It runs `helm install` and tracks a Helm release in the cluster",
+        "It uses Tiller in the cluster to manage releases",
+        "It delegates to `helm upgrade --install`"
+      ],
+      "answer": 0,
+      "explanation": "Argo CD templates Helm (renders YAML) and applies it. There is no Tiller and no Helm release object; Git + Argo CD history is the source of truth."
+    },
+    {
+      "id": "cd-26",
+      "type": "multi",
+      "category": "Argo CD · Helm & Kustomize",
+      "stem": "Because Argo CD only templates Helm (rather than installing it), which statements are true? (Select all that apply.)",
+      "options": [
+        "`helm list` shows nothing for these apps",
+        "There is no Helm release history stored in the cluster",
+        "Rollback is done via Argo CD / Git, not `helm rollback`",
+        "Tiller must be installed in the cluster"
+      ],
+      "answer": [0, 1, 2],
+      "explanation": "No release object means `helm list`/`helm rollback` don't apply and there's no in-cluster history. Tiller is not used at all."
+    },
+    {
+      "id": "cd-27",
+      "type": "single",
+      "category": "Argo CD · Helm & Kustomize",
+      "stem": "In `source.helm.valueFiles`, how is precedence determined when two files set the same value?",
+      "options": [
+        "Later files override earlier files",
+        "Earlier files override later files",
+        "The alphabetically last file wins",
+        "Listing more than one values file is an error"
+      ],
+      "answer": 0,
+      "explanation": "As with `helm -f`, order matters and later values files override earlier ones."
+    },
+    {
+      "id": "cd-28",
+      "type": "single",
+      "category": "Argo CD · Helm & Kustomize",
+      "stem": "Which `kustomize` field overrides container image names/tags?",
+      "options": [
+        "`images`",
+        "`namePrefix`",
+        "`commonLabels`",
+        "`replicas`"
+      ],
+      "answer": 0,
+      "explanation": "`kustomize.images` overrides image names/tags. `namePrefix` munges names, `commonLabels` adds labels, `replicas` sets replica counts."
+    },
+    {
+      "id": "cd-29",
+      "type": "single",
+      "category": "Argo CD · Reconciliation patterns",
+      "stem": "What are the three repeating steps of a reconciliation loop?",
+      "options": [
+        "Observe (read live state) → Compare (diff vs desired) → Act (converge toward desired)",
+        "Build → Test → Deploy",
+        "Capture → Route → Trigger",
+        "Split → Map → Reduce"
+      ],
+      "answer": 0,
+      "explanation": "A controller observes actual state, diffs it against the declared desired state, and acts to drive actual toward desired — forever."
+    },
+    {
+      "id": "cd-30",
+      "type": "single",
+      "category": "Argo CD · Reconciliation patterns",
+      "stem": "Kubernetes and Argo controllers are described as level-triggered. What does that mean?",
+      "options": [
+        "They react to the current state, so a missed signal self-corrects on the next loop",
+        "They react only to discrete events and stay wrong if a signal is missed",
+        "They run exactly once per change and then stop",
+        "They require an external scheduler to be triggered"
+      ],
+      "answer": 0,
+      "explanation": "Level-triggered controllers re-read reality each loop and reconcile toward desired state, so dropped notifications are fixed on the next pass — this is what makes them self-healing."
+    },
+    {
+      "id": "cd-31",
+      "type": "single",
+      "category": "Argo CD · Reconciliation patterns",
+      "stem": "Which Argo project is event/edge-driven rather than a level-triggered reconciliation loop?",
+      "options": [
+        "Argo Events",
+        "Argo CD",
+        "Argo Rollouts",
+        "Argo Workflows"
+      ],
+      "answer": 0,
+      "explanation": "Argo Events is the exception: it reacts to discrete events (event arrives → sensor → trigger) instead of continuously reconciling toward a declared state."
+    },
+    {
+      "id": "wf-01",
+      "type": "single",
+      "category": "Argo Workflows · Fundamentals",
+      "stem": "How is Argo Workflows implemented in Kubernetes?",
+      "options": [
+        "As a Custom Resource Definition — the `Workflow` is a live Kubernetes object",
+        "As a mutating admission webhook",
+        "As a kubelet plugin",
+        "As a Helm chart with no CRDs"
+      ],
+      "answer": 0,
+      "explanation": "Argo Workflows is built on CRDs; a `Workflow` is a live K8s object the controller reconciles."
+    },
+    {
+      "id": "wf-02",
+      "type": "single",
+      "category": "Argo Workflows · Fundamentals",
+      "stem": "What runs each step of a workflow?",
+      "options": [
+        "A single Kubernetes pod (not a Job pod — Argo manages retries itself)",
+        "A Kubernetes Job per step",
+        "A container inside the workflow controller pod",
+        "A dedicated node per step"
+      ],
+      "answer": 0,
+      "explanation": "Each step is one pod (with multiple containers). Argo deliberately avoids Job pods because it handles retries itself."
+    },
+    {
+      "id": "wf-03",
+      "type": "single",
+      "category": "Argo Workflows · Fundamentals",
+      "stem": "What does the InitContainer in a workflow pod do?",
+      "options": [
+        "Copies the `argoexec` binary into a shared volume and downloads input artifacts",
+        "Runs the user's main command",
+        "Monitors the main container and collects its outputs",
+        "Schedules the next workflow step"
+      ],
+      "answer": 0,
+      "explanation": "The init container stages `argoexec` into a shared volume and fetches input artifacts so the main container can run."
+    },
+    {
+      "id": "wf-04",
+      "type": "single",
+      "category": "Argo Workflows · Fundamentals",
+      "stem": "What is the role of the `wait` sidecar container in a workflow pod?",
+      "options": [
+        "It monitors the main container, collects output parameters/artifacts, and reports status to the controller",
+        "It runs the user-defined command",
+        "It copies argoexec into the pod",
+        "It hosts the artifact repository"
+      ],
+      "answer": 0,
+      "explanation": "The wait sidecar (running argoexec) watches the main container, gathers outputs, and reports completion status back to the controller."
+    },
+    {
+      "id": "wf-05",
+      "type": "single",
+      "category": "Argo Workflows · Fundamentals",
+      "stem": "Besides `Workflow`, which kinds does Argo Workflows provide?",
+      "options": [
+        "`CronWorkflow` and `WorkflowTemplate`",
+        "`Rollout` and `AnalysisTemplate`",
+        "`EventSource` and `Sensor`",
+        "`Application` and `AppProject`"
+      ],
+      "answer": 0,
+      "explanation": "CronWorkflow schedules workflows; WorkflowTemplate stores reusable definitions. Rollout/Analysis belong to Rollouts; EventSource/Sensor to Events; Application/AppProject to Argo CD."
+    },
+    {
+      "id": "wf-06",
+      "type": "single",
+      "category": "Argo Workflows · Fundamentals",
+      "stem": "How does Argo Workflows differ from Argo CD?",
+      "options": [
+        "Workflows runs jobs to completion; Argo CD continuously keeps a cluster matching Git",
+        "Workflows is the GitOps CD tool; Argo CD runs batch jobs",
+        "They are the same product under different names",
+        "Workflows is edge-driven; Argo CD is a DAG engine"
+      ],
+      "answer": 0,
+      "explanation": "Workflows orchestrates jobs/pipelines to completion; Argo CD continuously reconciles the cluster to match Git."
+    },
+    {
+      "id": "wf-07",
+      "type": "multi",
+      "category": "Argo Workflows · Artifacts",
+      "stem": "Which statements about parameters vs artifacts are correct? (Select all that apply.)",
+      "options": [
+        "Parameters are strings, stored in the Workflow object (etcd), with about a 1MB limit",
+        "Artifacts are files/directories stored in an external repository (S3/GCS/MinIO)",
+        "Artifacts have no practical size limit",
+        "Parameters are the right choice for moving large datasets"
+      ],
+      "answer": [0, 1, 2],
+      "explanation": "Parameters carry small strings inside the Workflow object; artifacts carry files/dirs via an external repo with no practical size cap. Large data must travel as artifacts, not parameters."
+    },
+    {
+      "id": "wf-08",
+      "type": "single",
+      "category": "Argo Workflows · Artifacts",
+      "stem": "You need to pass a multi-gigabyte dataset between steps. What should you use?",
+      "options": [
+        "An artifact, backed by the artifact repository",
+        "An output parameter",
+        "A workflow label",
+        "A pod annotation"
+      ],
+      "answer": 0,
+      "explanation": "Parameters are limited to small strings (~1MB, in etcd). Large data must move as artifacts via the configured artifact repository."
+    },
+    {
+      "id": "wf-09",
+      "type": "single",
+      "category": "Argo Workflows · Artifacts",
+      "stem": "How does a step consume an artifact produced by a previous step?",
+      "options": [
+        "By binding it in the consuming step's `arguments.artifacts` with a `from:` reference to the producer's output artifact",
+        "By setting `prune: true` on the workflow",
+        "By listing the producer under `dependencies`",
+        "By mounting it as a hostPath volume"
+      ],
+      "answer": 0,
+      "explanation": "The consumer references the producer's output via `from: {{steps.<step>.outputs.artifacts.<name>}}` (or `tasks.` in a DAG) in its `arguments.artifacts`."
+    },
+    {
+      "id": "wf-10",
+      "type": "single",
+      "category": "Argo Workflows · Artifacts",
+      "stem": "What is a 'key-only' artifact?",
+      "options": [
+        "One that specifies only the key, omitting bucket/credentials, so the configured default artifact repository is used",
+        "An artifact encrypted with a single key",
+        "An artifact passed by value as a parameter",
+        "An artifact stored directly in etcd"
+      ],
+      "answer": 0,
+      "explanation": "When bucket/secrets are omitted, Argo fills them in from the configured (default) artifact repository — only the object key is given."
+    },
+    {
+      "id": "wf-11",
+      "type": "single",
+      "category": "Argo Workflows · Artifacts",
+      "stem": "Can a step's input artifact be fetched directly from an external source like Git or S3, with no prior step producing it?",
+      "options": [
+        "Yes — Argo can fetch external input artifacts (git, s3, http, etc.) directly",
+        "No — every artifact must come from a previous step",
+        "Only parameters can be sourced externally",
+        "Only with a Config Management Plugin"
+      ],
+      "answer": 0,
+      "explanation": "Input artifacts can declare an external source (git/s3/http/…) and Argo fetches them with no upstream step needed."
+    },
+    {
+      "id": "wf-12",
+      "type": "single",
+      "category": "Argo Workflows · Templates",
+      "stem": "Which template types are ORCHESTRATORS (they invoke other templates and do no work themselves)?",
+      "options": [
+        "`steps` and `dag`",
+        "`container` and `script`",
+        "`resource` and `suspend`",
+        "`http` and `plugin`"
+      ],
+      "answer": 0,
+      "explanation": "`steps` and `dag` coordinate other templates. `container`/`script`/`resource`/etc. are worker templates that actually do work."
+    },
+    {
+      "id": "wf-13",
+      "type": "single",
+      "category": "Argo Workflows · Templates",
+      "stem": "What does a `script` template let you do?",
+      "options": [
+        "Run inline code in a container, with its stdout captured automatically as `outputs.result`",
+        "Orchestrate other templates as a DAG",
+        "Create or patch Kubernetes resources",
+        "Pause for manual approval"
+      ],
+      "answer": 0,
+      "explanation": "A `script` template is a container plus an inline script body; its stdout is auto-exposed as `outputs.result`."
+    },
+    {
+      "id": "wf-14",
+      "type": "single",
+      "category": "Argo Workflows · Templates",
+      "stem": "Which template type creates a manual approval gate or a timed pause?",
+      "options": [
+        "`suspend`",
+        "`container`",
+        "`resource`",
+        "`dag`"
+      ],
+      "answer": 0,
+      "explanation": "A `suspend` template pauses the workflow — either indefinitely (manual resume) or for a set duration."
+    },
+    {
+      "id": "wf-15",
+      "type": "single",
+      "category": "Argo Workflows · Templates",
+      "stem": "Which template type creates, patches, or deletes Kubernetes resources?",
+      "options": [
+        "`resource`",
+        "`script`",
+        "`http`",
+        "`steps`"
+      ],
+      "answer": 0,
+      "explanation": "A `resource` template performs create/apply/patch/delete operations on Kubernetes objects."
+    },
+    {
+      "id": "wf-16",
+      "type": "single",
+      "category": "Argo Workflows · Templates",
+      "stem": "Which of these template types spawns a pod?",
+      "options": [
+        "`container`",
+        "`steps`",
+        "`dag`",
+        "`suspend`"
+      ],
+      "answer": 0,
+      "explanation": "`container` (and `script`/`containerSet`) spawn pods. Orchestrators (`steps`, `dag`) and `suspend` do not run a pod."
+    },
+    {
+      "id": "wf-17",
+      "type": "single",
+      "category": "Argo Workflows · Templates",
+      "stem": "What is the `http` template used for?",
+      "options": [
+        "Triggering webhooks or calling external REST APIs without spawning a pod",
+        "Running an arbitrary container image",
+        "Defining a DAG of tasks",
+        "Pausing the workflow until resumed"
+      ],
+      "answer": 0,
+      "explanation": "The `http` template makes an HTTP call (webhook/REST) directly, without launching a worker pod."
+    },
+    {
+      "id": "wf-18",
+      "type": "single",
+      "category": "Argo Workflows · Spec",
+      "stem": "What does `spec.entrypoint` specify?",
+      "options": [
+        "Which template runs first (the 'main' function of the workflow)",
+        "The container image to use for all steps",
+        "The artifact repository endpoint",
+        "The service account for the controller"
+      ],
+      "answer": 0,
+      "explanation": "`entrypoint` names the template executed first when the workflow starts."
+    },
+    {
+      "id": "wf-19",
+      "type": "single",
+      "category": "Argo Workflows · Spec",
+      "stem": "What does `metadata.generateName` do?",
+      "options": [
+        "Provides a name prefix; the API server appends a random suffix to make a unique name",
+        "Sets a fixed name that must already be unique",
+        "Names the entrypoint template",
+        "Defines the workflow's namespace"
+      ],
+      "answer": 0,
+      "explanation": "`generateName` gives a prefix and the API server adds a random suffix — handy for submitting many runs. Use `name` for a fixed name."
+    },
+    {
+      "id": "wf-20",
+      "type": "single",
+      "category": "Argo Workflows · Spec",
+      "stem": "What is `spec.onExit` for?",
+      "options": [
+        "A template that runs when the workflow ends, on success OR failure (like a `finally`)",
+        "A template that runs before everything else",
+        "Garbage-collecting completed pods",
+        "Setting the workflow retry policy"
+      ],
+      "answer": 0,
+      "explanation": "`onExit` names an exit-handler template that always runs at the end, regardless of the workflow's outcome."
+    },
+    {
+      "id": "wf-21",
+      "type": "single",
+      "category": "Argo Workflows · Spec",
+      "stem": "What does `ttlStrategy.secondsAfterCompletion` control?",
+      "options": [
+        "How long after finishing the Workflow object is kept before auto-deletion (cleanup)",
+        "How long each pod is allowed to run",
+        "The retry backoff duration",
+        "How long artifacts are retained in the repository"
+      ],
+      "answer": 0,
+      "explanation": "`ttlStrategy` auto-deletes the finished Workflow object after the configured time, keeping the namespace tidy."
+    },
+    {
+      "id": "wf-22",
+      "type": "single",
+      "category": "Argo Workflows · Spec",
+      "stem": "In a `steps` template, what is the difference between `- -` starting a new line versus multiple items under one `- -`?",
+      "options": [
+        "`- -` starts a new SEQUENTIAL stage; multiple items under one `- -` run IN PARALLEL",
+        "`- -` runs items in parallel; multiple items under it run sequentially",
+        "Both forms run sequentially",
+        "Both forms run in parallel"
+      ],
+      "answer": 0,
+      "explanation": "A new `- -` begins a sequential stage (waits for the prior one); listing several steps under a single `- -` runs them in parallel."
+    },
+    {
+      "id": "wf-23",
+      "type": "single",
+      "category": "Argo Workflows · Spec",
+      "stem": "What does the built-in `{{workflow.status}}` variable resolve to?",
+      "options": [
+        "The workflow's final status: Succeeded / Failed / Error",
+        "The current Git revision",
+        "The main pod's IP address",
+        "The artifact repository endpoint"
+      ],
+      "answer": 0,
+      "explanation": "`{{workflow.status}}` is a built-in global (commonly used in exit handlers) holding Succeeded, Failed, or Error."
+    },
+    {
+      "id": "wf-24",
+      "type": "single",
+      "category": "Argo Workflows · DAGs",
+      "stem": "How does a `dag` template differ from a `steps` template?",
+      "options": [
+        "A DAG declares dependencies and Argo derives the order (maximizing parallelism); steps are sequential stages you arrange",
+        "A DAG is always sequential; steps are always parallel",
+        "They are functionally identical",
+        "A DAG cannot run any tasks in parallel"
+      ],
+      "answer": 0,
+      "explanation": "In a DAG you declare `dependencies`/`depends` and Argo runs each task as soon as its deps finish, parallelizing independent branches. `steps` is explicit sequential staging."
+    },
+    {
+      "id": "wf-25",
+      "type": "single",
+      "category": "Argo Workflows · DAGs",
+      "stem": "In the list form `dependencies: [A, B]`, when does the task run?",
+      "options": [
+        "After ALL listed tasks have succeeded",
+        "After ANY one listed task finishes",
+        "Immediately, ignoring A and B",
+        "Only if A and B both failed"
+      ],
+      "answer": 0,
+      "explanation": "`dependencies` waits for all listed tasks to succeed. For boolean logic or failure handling, use the `depends` string form."
+    },
+    {
+      "id": "wf-26",
+      "type": "single",
+      "category": "Argo Workflows · DAGs",
+      "stem": "What does the newer `depends` field support that `dependencies` does not?",
+      "options": [
+        "Boolean logic (`&&`, `||`, `!`) and result qualifiers like `.Succeeded` / `.Failed`",
+        "Nothing — they are identical",
+        "Only a single dependency",
+        "Passing artifacts between tasks"
+      ],
+      "answer": 0,
+      "explanation": "`depends` is a boolean expression supporting &&, ||, ! and qualifiers (.Succeeded, .Failed, .Skipped, …). `dependencies` is the simpler all-must-succeed list. Use one or the other, not both."
+    },
+    {
+      "id": "wf-27",
+      "type": "single",
+      "category": "Argo Workflows · DAGs",
+      "stem": "In a DAG, how do you reference a previous task's output parameter?",
+      "options": [
+        "`{{tasks.<name>.outputs.parameters.<param>}}` — note `tasks.`, not `steps.`",
+        "`{{steps.<name>.outputs.parameters.<param>}}`",
+        "`{{workflow.parameters.<param>}}`",
+        "`{{inputs.parameters.<param>}}`"
+      ],
+      "answer": 0,
+      "explanation": "DAG cross-task references use the `tasks.` prefix; `steps.` is for `steps` templates."
+    },
+    {
+      "id": "wf-28",
+      "type": "single",
+      "category": "Argo Workflows · DAGs",
+      "stem": "What does `dag.failFast: false` do?",
+      "options": [
+        "Lets branches that don't depend on a failed task keep running, instead of halting all new scheduling",
+        "Stops the entire DAG immediately on any failure",
+        "Disables retries for all tasks",
+        "Runs every task twice for safety"
+      ],
+      "answer": 0,
+      "explanation": "`failFast` defaults to true (stop scheduling new tasks on a failure). Setting it false lets unaffected branches continue."
+    },
+    {
+      "id": "wf-29",
+      "type": "single",
+      "category": "Argo Workflows · Data processing",
+      "stem": "What is the difference between `withItems` and `withParam`?",
+      "options": [
+        "`withItems` loops over a hardcoded list; `withParam` loops over a JSON-array string produced at runtime",
+        "`withItems` is dynamic; `withParam` is static",
+        "They are identical",
+        "`withParam` only works with `steps`, never `dag`"
+      ],
+      "answer": 0,
+      "explanation": "`withItems` fans out over a static list; `withParam` fans out over a runtime-generated JSON array (e.g. the stdout of a split step)."
+    },
+    {
+      "id": "wf-30",
+      "type": "single",
+      "category": "Argo Workflows · Data processing",
+      "stem": "Which pattern describes splitting input into chunks, mapping the same operation over each in parallel, then reducing the results?",
+      "options": [
+        "Split → Map → Reduce",
+        "Observe → Compare → Act",
+        "Capture → Route → Trigger",
+        "PreSync → Sync → PostSync"
+      ],
+      "answer": 0,
+      "explanation": "Split → Map → Reduce is the canonical data-processing pattern Argo Workflows targets, using dynamic fan-out and fan-in."
+    },
+    {
+      "id": "wf-31",
+      "type": "single",
+      "category": "Argo Workflows · Data processing",
+      "stem": "After a looped (fan-out) step runs, how are its `outputs.parameters.<name>` made available to a single reduce step?",
+      "options": [
+        "They are auto-aggregated into a JSON array string",
+        "Only the last instance's value is kept",
+        "They are discarded after the loop",
+        "They are converted into artifacts automatically"
+      ],
+      "answer": 0,
+      "explanation": "A looped step's output parameters are aggregated into a JSON array string, enabling a one-line reduce/aggregation step."
+    },
+    {
+      "id": "wf-32",
+      "type": "single",
+      "category": "Argo Workflows · Data processing",
+      "stem": "What does the `parallelism` field do?",
+      "options": [
+        "Caps how many pods run concurrently, protecting the cluster when a split produces many items",
+        "Sets the number of retries per step",
+        "Defines the artifact repository",
+        "Controls task ordering in a DAG"
+      ],
+      "answer": 0,
+      "explanation": "`parallelism` throttles concurrent pods (at workflow or template level) so a large fan-out doesn't flood the cluster."
+    },
+    {
+      "id": "wf-33",
+      "type": "single",
+      "category": "Argo Workflows · Data processing",
+      "stem": "Which field makes a long or heavy step resilient to transient failures, with backoff?",
+      "options": [
+        "`retryStrategy`",
+        "`ttlStrategy`",
+        "`podGC`",
+        "`memoize`"
+      ],
+      "answer": 0,
+      "explanation": "`retryStrategy` (limit, retryPolicy, backoff) retries failed steps. `ttlStrategy`/`podGC` are cleanup; `memoize` caches results."
+    },
+    {
+      "id": "wf-34",
+      "type": "single",
+      "category": "Argo Workflows · Data processing",
+      "stem": "What does `memoize` do for a step?",
+      "options": [
+        "Caches a step's output by key so it can skip recomputation",
+        "Retries the step on failure",
+        "Deletes the pod after completion",
+        "Aggregates loop outputs into an array"
+      ],
+      "answer": 0,
+      "explanation": "Memoization caches a step's result under a key; a later run with the same key reuses it instead of recomputing."
+    },
+    {
+      "id": "ro-01",
+      "type": "single",
+      "category": "Argo Rollouts · Fundamentals",
+      "stem": "What does Argo Rollouts add beyond a native Kubernetes Deployment?",
+      "options": [
+        "Progressive delivery — advanced strategies (canary, blue-green) with traffic shaping and metric-driven promotion/rollback",
+        "GitOps reconciliation from a Git repository",
+        "An event bus for triggering actions",
+        "A workflow DAG execution engine"
+      ],
+      "answer": 0,
+      "explanation": "A native Deployment only does RollingUpdate/Recreate. Rollouts adds fine-grained traffic control and analysis-based gating for progressive delivery."
+    },
+    {
+      "id": "ro-02",
+      "type": "single",
+      "category": "Argo Rollouts · Fundamentals",
+      "stem": "How does the `Rollout` resource relate to a Deployment?",
+      "options": [
+        "It's a drop-in Deployment replacement (`kind: Rollout`) that manages ReplicaSets, differing mainly by the `strategy` block",
+        "It runs inside a Deployment as a sidecar",
+        "It is a specialized kind of Job",
+        "It replaces the kubelet on each node"
+      ],
+      "answer": 0,
+      "explanation": "A Rollout replaces `kind: Deployment`, manages ReplicaSets under the hood, and the key difference is its `strategy` (canary/blueGreen) block."
+    },
+    {
+      "id": "ro-03",
+      "type": "single",
+      "category": "Argo Rollouts · Fundamentals",
+      "stem": "How can you use Rollouts to drive an EXISTING Deployment without changing its kind?",
+      "options": [
+        "Reference the Deployment via `workloadRef` so it stays and the Rollout drives it",
+        "Annotate the Deployment with `rollout: true`",
+        "Convert the Deployment into a Job",
+        "It is not possible — you must change the kind"
+      ],
+      "answer": 0,
+      "explanation": "`workloadRef` lets a Rollout drive an existing Deployment in place, instead of changing `kind: Deployment` to `kind: Rollout`."
+    },
+    {
+      "id": "ro-04",
+      "type": "single",
+      "category": "Argo Rollouts · Fundamentals",
+      "stem": "What does it mean to 'abort' a rollout?",
+      "options": [
+        "Stop the rollout and revert traffic to the stable version",
+        "Delete the stable ReplicaSet",
+        "Promote the canary immediately to 100%",
+        "Pause the rollout indefinitely"
+      ],
+      "answer": 0,
+      "explanation": "Aborting halts progression and shifts traffic back to the known-good stable version."
+    },
+    {
+      "id": "ro-05",
+      "type": "multi",
+      "category": "Argo Rollouts · Progressive Rollout Strategies",
+      "stem": "Which progressive delivery strategies does an Argo Rollouts `Rollout` natively provide? (Select all that apply.)",
+      "options": [
+        "Canary",
+        "Blue-Green",
+        "Recreate",
+        "DaemonSet rollout"
+      ],
+      "answer": [0, 1],
+      "explanation": "Rollouts provides canary and blue-green. Recreate is native Deployment behavior, not a Rollout strategy; there is no DaemonSet rollout strategy."
+    },
+    {
+      "id": "ro-06",
+      "type": "single",
+      "category": "Argo Rollouts · Progressive Rollout Strategies",
+      "stem": "How does the canary strategy shift traffic?",
+      "options": [
+        "Gradually, through a series of `steps` (e.g. `setWeight`), optionally pausing/analyzing between increments",
+        "All at once by flipping a Service selector",
+        "By deleting the stable version first",
+        "Randomly per request, with no control"
+      ],
+      "answer": 0,
+      "explanation": "Canary increases traffic to the new version step by step (`setWeight`, `pause`, `analysis`), catching problems before full rollout."
+    },
+    {
+      "id": "ro-07",
+      "type": "single",
+      "category": "Argo Rollouts · Progressive Rollout Strategies",
+      "stem": "How does the blue-green strategy work?",
+      "options": [
+        "Runs the new version (green) fully in parallel, then flips the Service selector from old (blue) to new in one cut",
+        "Gradually increases the traffic weight in steps",
+        "Runs only one version at any time",
+        "Requires a service mesh to perform the cutover"
+      ],
+      "answer": 0,
+      "explanation": "Blue-green stands up the new version alongside the old, then switches the active Service selector all at once (no mesh needed for the cut)."
+    },
+    {
+      "id": "ro-08",
+      "type": "single",
+      "category": "Argo Rollouts · Progressive Rollout Strategies",
+      "stem": "What is the difference between `pause: {}` and `pause: { duration: 5m }` in a canary?",
+      "options": [
+        "`pause: {}` pauses indefinitely until a manual promote; `pause: { duration: 5m }` pauses for a fixed time then auto-continues",
+        "`pause: {}` waits 5 minutes; the duration form waits forever",
+        "They behave identically",
+        "`pause: {}` aborts the rollout"
+      ],
+      "answer": 0,
+      "explanation": "An empty `pause: {}` blocks until someone runs a manual promote; a `duration` makes it a timed pause that resumes automatically."
+    },
+    {
+      "id": "ro-09",
+      "type": "single",
+      "category": "Argo Rollouts · Progressive Rollout Strategies",
+      "stem": "What does the canary step `setWeight: 20` do?",
+      "options": [
+        "Routes 20% of traffic to the canary",
+        "Sets 20 canary replicas",
+        "Pauses for 20 seconds",
+        "Allows up to 20 failed analyses"
+      ],
+      "answer": 0,
+      "explanation": "`setWeight: N` sends N% of traffic to the canary version."
+    },
+    {
+      "id": "ro-10",
+      "type": "single",
+      "category": "Argo Rollouts · Progressive Rollout Strategies",
+      "stem": "Without a service mesh/ingress integration, how is canary traffic weight determined?",
+      "options": [
+        "It's approximated by pod (replica) counts — coarse, and inaccurate at low replica counts",
+        "It is precise, per-request weighting",
+        "All traffic goes to the canary",
+        "Weighting cannot be done at all"
+      ],
+      "answer": 0,
+      "explanation": "Without a traffic provider, weight is approximated by adjusting replica counts — imprecise, especially with few replicas."
+    },
+    {
+      "id": "ro-11",
+      "type": "single",
+      "category": "Argo Rollouts · Progressive Rollout Strategies",
+      "stem": "Which provides precise, per-request canary weighting independent of pod count?",
+      "options": [
+        "A service mesh / ingress integration (Istio, NGINX, ALB, SMI, Gateway API)",
+        "Increasing the replica count",
+        "The pod readiness probe",
+        "An Argo CD PostSync hook"
+      ],
+      "answer": 0,
+      "explanation": "Mesh/ingress traffic routing weights requests precisely, independent of replica counts — the production-grade option for fine weights."
+    },
+    {
+      "id": "ro-12",
+      "type": "single",
+      "category": "Argo Rollouts · Progressive Rollout Strategies",
+      "stem": "In blue-green, what does `autoPromotionEnabled: false` mean?",
+      "options": [
+        "The rollout waits for a manual promotion before switching traffic",
+        "It auto-promotes immediately",
+        "It disables the preview service",
+        "It aborts after 30 seconds"
+      ],
+      "answer": 0,
+      "explanation": "With auto-promotion disabled, the new version is held at preview until a human promotes it."
+    },
+    {
+      "id": "ro-13",
+      "type": "single",
+      "category": "Argo Rollouts · Analysis",
+      "stem": "What is the relationship between an AnalysisTemplate and an AnalysisRun?",
+      "options": [
+        "AnalysisTemplate is the reusable definition; an AnalysisRun is a live execution of it (like a Job from a CronJob)",
+        "AnalysisRun is the definition; AnalysisTemplate is the execution",
+        "They are the same object",
+        "AnalysisTemplate stores metrics; AnalysisRun defines queries"
+      ],
+      "answer": 0,
+      "explanation": "A Rollout references an AnalysisTemplate; when triggered it instantiates an AnalysisRun, which produces the verdict the Rollout observes."
+    },
+    {
+      "id": "ro-14",
+      "type": "single",
+      "category": "Argo Rollouts · Analysis",
+      "stem": "How does a `ClusterAnalysisTemplate` differ from an `AnalysisTemplate`?",
+      "options": [
+        "It is cluster-scoped (shared across namespaces) rather than namespaced",
+        "It samples metrics faster",
+        "It only works with Prometheus",
+        "It cannot be referenced by a Rollout"
+      ],
+      "answer": 0,
+      "explanation": "ClusterAnalysisTemplate is the cluster-scoped variant, so one definition can be reused across namespaces."
+    },
+    {
+      "id": "ro-15",
+      "type": "multi",
+      "category": "Argo Rollouts · Analysis",
+      "stem": "Which fields drive an analysis metric's verdict? (Select all that apply.)",
+      "options": [
+        "`successCondition`",
+        "`failureCondition`",
+        "`failureLimit`",
+        "`setWeight`"
+      ],
+      "answer": [0, 1, 2],
+      "explanation": "`successCondition`/`failureCondition` evaluate the query result and `failureLimit` tolerates a number of failures. `setWeight` is a canary traffic step, not an analysis field."
+    },
+    {
+      "id": "ro-16",
+      "type": "single",
+      "category": "Argo Rollouts · Analysis",
+      "stem": "What happens to a Rollout when an AnalysisRun result is `Failed`?",
+      "options": [
+        "The rollout aborts and reverts to the stable version",
+        "The canary is promoted to 100%",
+        "The rollout pauses indefinitely",
+        "Nothing — analysis is advisory only"
+      ],
+      "answer": 0,
+      "explanation": "A failed AnalysisRun aborts the rollout and reverts to stable — the automated, metric-driven rollback that defines progressive delivery."
+    },
+    {
+      "id": "ro-17",
+      "type": "single",
+      "category": "Argo Rollouts · Analysis",
+      "stem": "What does an `Inconclusive` AnalysisRun result cause?",
+      "options": [
+        "The rollout pauses for a manual decision",
+        "Immediate promotion to stable",
+        "Immediate abort and rollback",
+        "A full retry of the rollout"
+      ],
+      "answer": 0,
+      "explanation": "An inconclusive verdict isn't a clear pass or fail, so the rollout pauses and waits for a human to decide."
+    },
+    {
+      "id": "ro-18",
+      "type": "single",
+      "category": "Argo Rollouts · Analysis",
+      "stem": "Which can serve as an analysis metric provider?",
+      "options": [
+        "Prometheus — and also Datadog, CloudWatch, a Kubernetes Job, a Web request, and more",
+        "Only Prometheus",
+        "Only a Kubernetes Job",
+        "Only the Web provider"
+      ],
+      "answer": 0,
+      "explanation": "Rollouts supports many providers: Prometheus, Datadog, New Relic, Wavefront, CloudWatch, Graphite, InfluxDB, a Job, and a Web provider."
+    },
+    {
+      "id": "ev-01",
+      "type": "single",
+      "category": "Argo Events · Fundamentals",
+      "stem": "What is Argo Events?",
+      "options": [
+        "A Kubernetes-native, event-driven automation framework that triggers actions in response to events",
+        "A GitOps continuous delivery tool",
+        "A progressive delivery controller",
+        "A workflow DAG engine"
+      ],
+      "answer": 0,
+      "explanation": "Argo Events listens for events from many sources and fires actions (start a Workflow, patch a resource, call HTTP/Lambda/Slack, trigger an Argo CD sync, etc.)."
+    },
+    {
+      "id": "ev-02",
+      "type": "single",
+      "category": "Argo Events · Fundamentals",
+      "stem": "How does Argo Events' execution model differ from Argo CD/Rollouts/Workflows?",
+      "options": [
+        "It is event/edge-driven ('when X happens, do Y'), not a level-triggered reconciliation loop",
+        "It is a level-triggered reconciliation loop just like the others",
+        "It runs batch jobs to completion",
+        "It continuously syncs Git to the cluster"
+      ],
+      "answer": 0,
+      "explanation": "Argo Events reacts to discrete events as they arrive — the edge-driven exception to the reconciliation-loop pattern used by the rest of the family."
+    },
+    {
+      "id": "ev-03",
+      "type": "single",
+      "category": "Argo Events · Fundamentals",
+      "stem": "Into what standard envelope does Argo Events normalize events before they flow through the system?",
+      "options": [
+        "CloudEvents (a CNCF standard)",
+        "OpenTelemetry traces",
+        "The Prometheus exposition format",
+        "Raw JSON Schema documents"
+      ],
+      "answer": 0,
+      "explanation": "EventSources normalize incoming events into the CloudEvents envelope so downstream components see a consistent shape."
+    },
+    {
+      "id": "ev-04",
+      "type": "multi",
+      "category": "Argo Events · Fundamentals",
+      "stem": "Which are typical Argo Events use cases? (Select all that apply.)",
+      "options": [
+        "Event-driven CI/CD (a Git or image push triggers a build or an Argo CD sync)",
+        "Kicking off a data pipeline when a file lands in S3",
+        "ChatOps / automation from a Slack command or webhook",
+        "Continuously reconciling Git to match the cluster"
+      ],
+      "answer": [0, 1, 2],
+      "explanation": "Events drives event-driven CI/CD, data-pipeline triggers, and ChatOps. Continuously reconciling Git to the cluster is Argo CD's job, not Argo Events'."
+    },
+    {
+      "id": "ev-05",
+      "type": "single",
+      "category": "Argo Events · Components & architecture",
+      "stem": "What are the three core components of Argo Events, in order?",
+      "options": [
+        "EventSource → EventBus → Sensor (with Triggers defined inside the Sensor)",
+        "Sensor → EventBus → EventSource",
+        "EventBus → Sensor → Trigger → EventSource",
+        "Application → AppProject → ApplicationSet"
+      ],
+      "answer": 0,
+      "explanation": "EventSource captures/normalizes and publishes; EventBus transports; Sensor evaluates dependencies and fires Triggers."
+    },
+    {
+      "id": "ev-06",
+      "type": "single",
+      "category": "Argo Events · Components & architecture",
+      "stem": "What does an EventSource do?",
+      "options": [
+        "Captures events from an external system, converts them to CloudEvents, and publishes them to the EventBus",
+        "Subscribes to the bus and fires triggers",
+        "Provides the publish/subscribe transport",
+        "Watches the CRDs and manages deployments"
+      ],
+      "answer": 0,
+      "explanation": "EventSource is the capture-and-normalize component; it runs as its own pod and publishes CloudEvents to the EventBus."
+    },
+    {
+      "id": "ev-07",
+      "type": "single",
+      "category": "Argo Events · Components & architecture",
+      "stem": "What is the EventBus?",
+      "options": [
+        "The publish/subscribe transport layer that decouples EventSources from Sensors",
+        "The component that captures external events",
+        "The component that fires triggers",
+        "An analysis metric provider"
+      ],
+      "answer": 0,
+      "explanation": "The EventBus is the pub/sub backbone; decoupling sources from sensors is its whole value — many sensors can react to one source."
+    },
+    {
+      "id": "ev-08",
+      "type": "single",
+      "category": "Argo Events · Components & architecture",
+      "stem": "What does a Sensor do?",
+      "options": [
+        "Subscribes to the EventBus, evaluates dependencies (and filters), and fires triggers when conditions are met",
+        "Captures external events and normalizes them",
+        "Provides the transport between components",
+        "Generates Applications from a template"
+      ],
+      "answer": 0,
+      "explanation": "The Sensor is the 'brain': it watches for its declared dependencies (with optional filters) and fires triggers when satisfied."
+    },
+    {
+      "id": "ev-09",
+      "type": "single",
+      "category": "Argo Events · Components & architecture",
+      "stem": "Which is the modern, recommended EventBus implementation?",
+      "options": [
+        "JetStream (NATS Streaming is deprecated; Kafka is also supported)",
+        "Redis",
+        "etcd",
+        "RabbitMQ only"
+      ],
+      "answer": 0,
+      "explanation": "JetStream is the recommended bus; NATS Streaming (STAN) is deprecated, and Kafka is also supported. Run replicas for HA."
+    },
+    {
+      "id": "ev-10",
+      "type": "single",
+      "category": "Argo Events · Components & architecture",
+      "stem": "In a Sensor, what is the difference between dependencies and triggers?",
+      "options": [
+        "Dependencies are the events awaited (plus filters); triggers are the actions taken when conditions are met",
+        "Dependencies are the actions; triggers are the awaited events",
+        "They are two names for the same thing",
+        "Dependencies define the EventBus; triggers define the EventSource"
+      ],
+      "answer": 0,
+      "explanation": "Dependencies declare which events (and filters) the Sensor waits for; triggers are what it does once those conditions are satisfied."
+    },
+    {
+      "id": "ev-11",
+      "type": "single",
+      "category": "Argo Events · Components & architecture",
+      "stem": "How can a Sensor require a COMBINATION of events before firing?",
+      "options": [
+        "By combining its dependencies with boolean `conditions` (e.g. requiring dep-a AND dep-b)",
+        "By adding more EventSources",
+        "By increasing the EventBus replica count",
+        "It cannot — a Sensor fires on a single event only"
+      ],
+      "answer": 0,
+      "explanation": "Boolean `conditions` over named dependencies let a trigger fire only on a specific combination of events."
+    },
+    {
+      "id": "ev-12",
+      "type": "single",
+      "category": "Argo Events · Components & architecture",
+      "stem": "What does the Argo Events controller-manager do, and where do components typically run?",
+      "options": [
+        "It watches the EventSource/Sensor/EventBus CRDs and manages their deployments/pods, typically in the `argo-events` namespace",
+        "It serves live production traffic to the new version",
+        "It generates manifests from Helm charts",
+        "It runs the canary analysis metrics"
+      ],
+      "answer": 0,
+      "explanation": "A single controller-manager reconciles the three CRDs and creates the underlying pods, usually within the `argo-events` namespace."
+    },
+    {
+      "id": "ev-13",
+      "type": "single",
+      "category": "Argo Events · Components & architecture",
+      "stem": "Which trigger types are the most common / exam-relevant for Argo Events?",
+      "options": [
+        "Launching an Argo Workflow or creating a Kubernetes resource (also HTTP, Lambda, Slack, etc.)",
+        "Only Slack messages",
+        "Only HTTP requests",
+        "Only AWS Lambda invocations"
+      ],
+      "answer": 0,
+      "explanation": "Triggering an Argo Workflow (event-driven CI) or creating a K8s resource (e.g. an Argo CD sync) are the headline trigger types; many others exist."
+    }
+  ]
+}
