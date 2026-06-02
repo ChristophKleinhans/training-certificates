@@ -665,3 +665,113 @@ Available to Helm parameter substitution, Kustomize, and plugins:
 5. **CMP for everything else.** A plugin sidecar lets Argo CD apply any tool's
    stdout manifests (helmfile, jsonnet, cdk8s, …).
 6. **Build env vars** like `ARGOCD_APP_NAME` are usable in parameters and plugins.
+
+# Identify Common Reconciliation Patterns — Annotated Notes
+
+Reconciliation is the controller pattern underneath the *entire* Argo ecosystem.
+Once you recognize it, Argo CD, Rollouts, and Workflows all look like the same
+machine aimed at different problems.
+
+## The reconciliation loop
+
+A controller runs this loop continuously, forever:
+
+```
+        ┌──────────────────────────────────────────────┐
+        │                                                │
+        ▼                                                │
+   1. OBSERVE        2. COMPARE (diff)        3. ACT      │
+   read actual   →   desired vs actual?   →   converge ──┘
+   (live) state      compute the gap          toward desired
+```
+
+- **Desired state** — what you declared (Git manifests, a Workflow spec, a
+  Rollout strategy). The "target."
+- **Observed/actual state** — what is really running in the cluster.
+- The controller's only job: **drive actual → desired and keep it there.**
+
+## THE key distinction: level-triggered vs edge-triggered
+
+| | Edge-triggered | Level-triggered ✅ (Kubernetes / Argo) |
+|--|----------------|----------------------------------------|
+| Reacts to | **events** ("a change happened") | **state** ("the world currently looks like X") |
+| Missed signal | stays wrong forever | self-corrects on the next loop |
+| Robustness | fragile | resilient |
+| Example | "on push, deploy" | "make the cluster match Git, always" |
+
+Level-triggered design is *why* Argo controllers self-heal and tolerate missed
+events: every loop re-reads reality from scratch, so a dropped notification just
+gets fixed on the next pass.
+
+## Patterns that fall out of this design
+
+| Pattern | Meaning | Where you see it |
+|---------|---------|------------------|
+| **Idempotency** | running the loop twice = same result (re-applying a correct manifest is a no-op) | every Argo controller |
+| **Eventual consistency** | system converges over repeated loops, not instantly | sync waves waiting for health; rollout steps |
+| **Drift detection** | loop notices live ≠ desired | Argo CD `OutOfSync` status |
+| **Self-healing** | loop actively reverts drift to desired | Argo CD `selfHeal: true` |
+| **Continuous reconciliation** | watch + periodic resync interval keep it current | controllers re-queue on a timer |
+| **Convergence** | repeated correction until actual == desired | all of the above |
+
+## The same loop across Argo
+
+| Tool | Desired state | Observed state | Reconcile action |
+|------|---------------|----------------|------------------|
+| **Argo CD** | Git manifests | live cluster objects | sync / prune / self-heal toward Git |
+| **Argo Rollouts** | Rollout strategy + steps | current ReplicaSets/traffic | advance/pause the rollout step |
+| **Argo Workflows** | Workflow spec (DAG/steps) | pod/node statuses | schedule next runnable node |
+| **Argo Events** ⚠️ | n/a (edge-driven) | incoming events | fire trigger on event (NOT a level loop) |
+
+> ⚠️ **Argo Events is the odd one out.** It is genuinely **event/edge-driven**
+> (event arrives → sensor → trigger), not a level-triggered reconciliation loop.
+> A common exam contrast.
+
+## Lifecycle plumbing that supports reconciliation
+
+```yaml
+# ── Owner references: enable cascading deletion of child resources ──
+metadata:
+  ownerReferences:
+    - apiVersion: apps/v1
+      kind: ReplicaSet
+      name: web-rs
+      uid: "..."
+      controller: true               # deleting the owner garbage-collects this child
+
+# ── Finalizers: run cleanup BEFORE the object is actually removed ──
+metadata:
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io   # Argo CD prunes app resources on delete
+```
+
+```yaml
+# ── Argo CD: the self-heal half of the reconcile loop ──
+spec:
+  syncPolicy:
+    automated:
+      selfHeal: true                 # actively revert live drift back to Git (correction)
+      prune: true                    # delete resources no longer in desired state
+```
+
+## Watch + resync (how the loop is actually driven)
+
+- **Watch**: controllers subscribe to API-server change notifications, so they
+  reconcile *promptly* when something changes (efficient, near-real-time).
+- **Periodic resync**: they ALSO re-reconcile on a timer regardless of events —
+  this is the safety net that makes the system level-triggered (catches anything
+  a watch missed). In Argo CD this is the app reconciliation interval.
+
+## Exam-relevant points
+
+1. **Reconciliation loop = observe → diff → act, repeated forever.** Drive actual
+   state toward declared desired state and hold it there.
+2. **Level-triggered, not edge-triggered.** React to *state*, not *events*; this
+   is what makes Argo controllers self-healing and resilient to missed signals.
+3. **Idempotency + eventual consistency.** Re-running is safe; the system
+   converges over repeated loops rather than in one shot.
+4. **Self-heal vs prune.** Self-heal corrects drift back to desired; prune removes
+   what's no longer desired — both are the reconcile loop acting.
+5. **Argo Events is the exception** — event/edge-driven, not a level loop.
+6. **Owner references** drive cascading deletion; **finalizers** gate deletion to
+   allow cleanup first.
