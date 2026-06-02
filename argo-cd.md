@@ -494,3 +494,174 @@ spec:
    resources running.
 5. **Multi-source apps** combine a chart from one repo with values from another
    via a named `ref`.
+
+# Configure Argo CD with Helm and Kustomize — Annotated Example
+
+Argo CD natively supports **Helm** and **Kustomize** as config-management tools.
+The critical thing to understand is *how* Argo CD drives them — it differs from
+running them by hand.
+
+## The #1 concept: Argo CD TEMPLATES, it does not install
+
+| Tool | What Argo CD runs | What it does NOT do |
+|------|-------------------|---------------------|
+| Helm | `helm template` → applies output | no `helm install`, no Tiller, no release object, `helm list` shows nothing |
+| Kustomize | `kustomize build` → applies output | nothing special; output is plain manifests |
+
+Consequences for Helm:
+- Helm is used as a **templating engine only**; Argo CD applies the rendered YAML.
+- **Helm lifecycle hooks** (`helm.sh/hook`) don't run via `helm install`. Argo CD
+  converts the common ones to **Argo CD sync hooks** instead.
+- No release history in the cluster — **Argo CD** (Git + its own history) is the
+  source of truth and the rollback mechanism, not `helm rollback`.
+
+## Helm source configuration
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: web-helm
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/example/app.git
+    targetRevision: main
+    path: chart                      # Chart dir in Git. (Use `chart:` for a Helm repo/OCI — see below.)
+    helm:
+      releaseName: web               # Sets .Release.Name during templating.
+      valueFiles:                    # Equivalent of `-f`. Order matters (later overrides earlier).
+        - values.yaml
+        - values-prod.yaml
+      ignoreMissingValueFiles: true  # Don't fail if a listed values file is absent.
+      parameters:                    # Equivalent of `--set` (type-aware).
+        - name: image.tag
+          value: "1.8.0"
+        - name: replicaCount
+          value: "3"
+      fileParameters:                # Equivalent of `--set-file` (value read from a file).
+        - name: config.ini
+          path: files/config.ini
+      values: |                      # Inline values (equivalent of an extra -f). 
+        service:
+          type: ClusterIP
+      # valuesObject: { ... }        # Structured inline values (preferred over the string form).
+      skipCrds: false                # true = pass --skip-crds to `helm template`.
+      passCredentials: false         # Pass repo creds to dependency chart repos.
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: web
+```
+
+### Helm chart straight from a Helm repo or OCI registry
+
+```yaml
+  source:
+    repoURL: https://charts.bitnami.com/bitnami   # or oci://registry.example.com/charts
+    chart: nginx                     # `chart:` (NOT `path:`) signals a Helm repo source.
+    targetRevision: 15.0.0           # Here targetRevision is the CHART VERSION.
+    helm:
+      valueFiles: [ values.yaml ]
+```
+
+## Kustomize source configuration
+
+```yaml
+  source:
+    repoURL: https://github.com/example/app.git
+    targetRevision: main
+    path: overlays/prod              # Folder containing kustomization.yaml
+    kustomize:
+      namePrefix: prod-              # Prepend to resource names.
+      nameSuffix: -v2                # Append to resource names.
+      images:                        # Override image names/tags.
+        - example/web:1.8.0
+      replicas:
+        - name: web
+          count: 3
+      commonLabels:                  # Labels added to every resource.
+        app.kubernetes.io/managed-by: argocd
+      commonAnnotations:
+        team: platform
+      namespace: web                 # Set/override namespace on resources.
+      patches:                       # Strategic-merge / JSON6902 patches.
+        - target: { kind: Deployment, name: web }
+          patch: |
+            - op: add
+              path: /spec/template/metadata/labels/tier
+              value: frontend
+```
+
+## Combining: Kustomize inflating a Helm chart
+
+Kustomize can render a Helm chart itself (the `helmCharts:` field), enabled in
+Argo CD via the build option below.
+
+```yaml
+  source:
+    path: overlays/prod
+    kustomize:
+      # requires kustomize built with --enable-helm (set on the repo-server / via flag)
+      # kustomization.yaml then uses a `helmCharts:` block to inflate the chart,
+      # and the overlay patches the rendered output.
+```
+
+## Config Management Plugins (CMP) — beyond the built-ins
+
+For tools Argo CD doesn't support natively (helmfile, jsonnet bundlers, cdk8s,
+etc.), a **CMP** sidecar on the repo-server runs your command and Argo CD applies
+whatever manifests it prints to **stdout**.
+
+```yaml
+# A plugin is referenced from the Application like this:
+  source:
+    plugin:
+      name: helmfile
+      parameters:
+        - name: environment
+          string: prod
+```
+
+## Build environment variables
+
+Available to Helm parameter substitution, Kustomize, and plugins:
+
+| Variable | Meaning |
+|----------|---------|
+| `ARGOCD_APP_NAME` | The Application's name |
+| `ARGOCD_APP_NAMESPACE` | Destination namespace |
+| `ARGOCD_APP_REVISION` | Resolved Git revision |
+| `ARGOCD_APP_SOURCE_PATH` | The `source.path` |
+| `ARGOCD_APP_SOURCE_TARGET_REVISION` | The configured target revision |
+
+```yaml
+      parameters:
+        - name: fullnameOverride
+          value: "$ARGOCD_APP_NAME"   # substituted from the build environment
+```
+
+## Quick reference
+
+| Need | Helm | Kustomize |
+|------|------|-----------|
+| Pick values | `valueFiles`, `values`, `valuesObject` | (overlay folders) |
+| Override a value | `parameters` (`--set`) | `images`, `replicas`, `patches` |
+| Name munging | `releaseName` | `namePrefix`, `nameSuffix` |
+| Labels everywhere | values-dependent | `commonLabels`, `commonAnnotations` |
+| Chart from registry | `chart:` + version in `targetRevision` | n/a |
+| Skip CRDs | `skipCrds: true` | n/a |
+
+## Exam-relevant points
+
+1. **`helm template`, not `helm install`.** No Tiller, no release object, no
+   `helm list`/`helm rollback`. Helm is just a renderer; Argo CD applies the YAML.
+2. **Helm hooks ≠ helm-managed here.** Argo CD maps common Helm hooks onto its own
+   sync hooks; they don't execute through a Helm release lifecycle.
+3. **`path:` vs `chart:`.** `path:` = chart in Git; `chart:` = chart from a Helm
+   repo/OCI registry, with `targetRevision` meaning the chart version.
+4. **Kustomize overlays declaratively.** `images`, `namePrefix`, `replicas`,
+   `commonLabels`, `patches` — all expressible in the `kustomize` block.
+5. **CMP for everything else.** A plugin sidecar lets Argo CD apply any tool's
+   stdout manifests (helmfile, jsonnet, cdk8s, …).
+6. **Build env vars** like `ARGOCD_APP_NAME` are usable in parameters and plugins.
