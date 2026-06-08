@@ -34,4 +34,7 @@ While the model weights are loaded once and stay fixed, the KV cache is dynamic.
 1. GPU memory:
    - Model weights have always fixed space independent of serving 1 or 100 users
    - KV cache grows with every token in every active request
-     -   One long-context request (32k tokens) needs 10GB KV Cache, that means with 180GB I could serve 18 long-context users in parallel (32,768 tokens are about the half of the book "The Great Gatsby" when assuming that a token is about 3/4 of an English word, or 50 single-spaced pages) 
+     -   One long-context request (32k tokens) needs 10GB KV Cache, that means with 180GB I could serve 18 long-context users in parallel (32,768 tokens are about the half of the book "The Great Gatsby" when assuming that a token is about 3/4 of an English word, or 50 single-spaced pages)
+
+Unfortunately we have always tradeoffs, the tradeoff triangle for LLM deployments is between **COST - ACCURACY - PERFORMANCE**
+     
