@@ -58,7 +58,7 @@ X.2. ...
 X.3. Last token is an *End of sequence token* that signals that it is done
 
 That means, that when the model is generating a 500 tokens long response, each token needs to propagate through the model.
-[!NOTE]
-Not the token itself propates through the model, the vector representation of the token.
+> [!NOTE]
+> Not the token itself propates through the model, the vector representation of the token.
 
 
