@@ -38,3 +38,6 @@ While the model weights are loaded once and stay fixed, the KV cache is dynamic.
 
 Unfortunately we have always tradeoffs, the tradeoff triangle for LLM deployments is between **COST - ACCURACY - PERFORMANCE**. We can pick two of them, not all three.
      
+## Fundamentals
+
+### 
