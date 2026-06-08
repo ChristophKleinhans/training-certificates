@@ -90,6 +90,11 @@ Takes the weighted sum of all the value vectors using those weigts. The result i
 
 <img width="472" height="264" alt="image" src="https://github.com/user-attachments/assets/9007c28b-cf2c-4752-92d8-ab37848666ca" />
 
-**The KV cache**
-As you can see in the diagrams above, we need the complete history of the Keys and Values.
+**The KV cache size calculation**
+As you can see in the diagrams above, we need the complete history of the Keys and Values. Because the K and V is only computed once it can be cached, only the lagtest KV is calculated.
+
+Lets take LLama 3 70B as example and use BF16 precision:
+
+<img width="726" height="564" alt="image" src="https://github.com/user-attachments/assets/aef03bee-c1a2-4eda-bf0e-7f1d681c80ae" />
+
 
