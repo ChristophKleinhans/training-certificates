@@ -37,7 +37,10 @@ While the model weights are loaded once and stay fixed, the KV cache is dynamic.
      -   One long-context request (32k tokens) needs 10GB KV Cache, that means with 180GB I could serve 18 long-context users in parallel (32,768 tokens are about the half of the book "The Great Gatsby" when assuming that a token is about 3/4 of an English word, or 50 single-spaced pages)
 
 Unfortunately we have always tradeoffs, the tradeoff triangle for LLM deployments is between **COST - ACCURACY - PERFORMANCE**. We can pick two of them, not all three.
-     
+
+---
+
+
 ## Fundamentals
 
 ### Inference
@@ -110,3 +113,35 @@ SRAM = Static RAM
 <img width="804" height="558" alt="image" src="https://github.com/user-attachments/assets/50af2e29-86aa-4785-b334-8fb635250774" />
 
 The Models weigts and the KV cache live in VRAM. Every forward pass is passed to the SRAM (discarded when computations are done), means chunks of weights, chunks of KV cache and intermediate results live in SRAM.
+
+---
+
+## Compression
+
+### Quantization
+
+- LLMs are typically released in BF16 (Brain Floating Point 16 bit (2 Byte) which is more efficient than FP16)
+- Quantization often supports FP8, INT8, INT4 (FP=Floating-Point, INT=Integer)
+
+<img width="498" height="350" alt="image" src="https://github.com/user-attachments/assets/14c98439-2770-4182-9b66-8d51f10b77d9" />
+
+Quantization focuses on the linear layers of the self-attention blocks and feed-forward networks and ALSO on the input actionations. NOT the embedding layer at the start and the LM Head at the end.
+
+The *input activations* are the tensor that gets multiplied by the weights in every linear layer. For example, the tensor representation of a token which is the input for q,k and v. And/Or the weighted sum output which flows into o_proj.
+
+### Sparsification
+
+Removes unnecessary weights
+- Typically 2 of 4, where 2 out of every 4 values within a model weight tensor are set to 0 -> Reducing memory and computation cost
+
+
+### Advantages of Weight and Activation Quantization
+
+- Lower latency for data movement. Reduce data from HBM to SRAM, so not so much data needs to be moved
+- The tensor cores can do more operations per second when numbers are in lower-precision format
+
+### Quantization Schemes
+
+- **Weight only quantization (ex. W8A16)**: The weights are INT8 and during inference the activation remain BF16. Less data to pull between VRAM and SRAM but NO tensor core speedup, because the matrix multiplication needs to be done with the same precision BF16xBF16.
+- **Weight & Activation Quantization (ex. W8A8)**: Reduces data from HBM to SRAM and ALSO use tensor cores with more FLOPS (Floating point operations per second)
+- 
