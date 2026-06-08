@@ -40,4 +40,25 @@ Unfortunately we have always tradeoffs, the tradeoff triangle for LLM deployment
      
 ## Fundamentals
 
-### 
+### Inference
+
+The serve one or many User with an Inference API where the user ask using a prompt and get some response, we need:
+1. The model
+2. The inference server (f.i. vLLM)
+3. Hardware accelerator (f.i. nvidia GPU)
+
+### Text generation
+
+1.1. Lets pass "The quick brown" tokens to the model
+1.2. The model processes the input by a *forward pass* and predicts the next token "fox" which gets appended to the **input**
+2.1. Next run with "The quick brown fox" forward pass
+2.2. Model predicts "jumps"
+X.1. ...
+X.2. ...
+X.3. Last token is an *End of sequence token* that signals that it is done
+
+That means, that when the model is generating a 500 tokens long response, each token needs to propagate through the model.
+[!NOTE]
+Not the token itself propates through the model, the vector representation of the token.
+
+
