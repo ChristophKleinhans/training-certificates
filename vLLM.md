@@ -72,3 +72,24 @@ At the end output goes into the LM Head which returns a score for the models int
 
 <img width="1250" height="560" alt="image" src="https://github.com/user-attachments/assets/e5d8c7a1-630e-4b6c-a5d2-cf338a6d1453" />
 
+### Linear Layers
+
+How do the *q_proj*, *k_proj*, *v_proj*, *o_proj* layers work:
+
+<img width="824" height="151" alt="image" src="https://github.com/user-attachments/assets/eef9a2c2-4924-40c9-8b01-7010a25c9d2b" />
+
+**Q Projection**
+
+Using the query *Q4* (The four means token 4, so the token 4 is the query) and compare it agains every token so far including itself using a dot product. The higher dot product means *the token is relevant for token four*, a lower dot product means is less relevant.
+
+<img width="525" height="226" alt="image" src="https://github.com/user-attachments/assets/edabe575-e37c-4a65-87a0-fef40d4b885c" />
+
+**V Projection**
+
+Takes the weighted sum of all the value vectors using those weigts. The result is a single vector which is enriched with the context from the rest of the sequence. That vector passes through the *o_proj*
+
+<img width="472" height="264" alt="image" src="https://github.com/user-attachments/assets/9007c28b-cf2c-4752-92d8-ab37848666ca" />
+
+**The KV cache**
+As you can see in the diagrams above, we need the complete history of the Keys and Values.
+
