@@ -109,3 +109,4 @@ SRAM = Static RAM
 
 <img width="804" height="558" alt="image" src="https://github.com/user-attachments/assets/50af2e29-86aa-4785-b334-8fb635250774" />
 
+The Models weigts and the KV cache live in VRAM. Every forward pass is passed to the SRAM (discarded when computations are done).
