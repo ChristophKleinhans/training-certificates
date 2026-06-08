@@ -57,8 +57,18 @@ X.1. ...
 X.2. ...
 X.3. Last token is an *End of sequence token* that signals that it is done
 
-That means, that when the model is generating a 500 tokens long response, each token needs to propagate through the model.
-> [!NOTE]
-> Not the token itself propates through the model, the vector representation of the token.
+That means, that when the model is generating a 500 tokens long response, each token needs to propagate through the model, that means the model runs 500 times.
 
+> [!NOTE]
+> Not the token itself propates through the model, the vector representation of the token does.
+
+### Forward pass through the model
+
+The transformer layer has two main parts:
+1. *Self-Attention* is where token exchange information with each other
+1. *Feed-Forward Network* processes each tokens representation further
+
+At the end output goes into the LM Head which returns a score for the models internal representation for the possible next token. The highest scoring token is the prediction. Then the prediction gets appended to the input and the whole stack runs again for the next forward pass.
+
+<img width="1250" height="560" alt="image" src="https://github.com/user-attachments/assets/e5d8c7a1-630e-4b6c-a5d2-cf338a6d1453" />
 
