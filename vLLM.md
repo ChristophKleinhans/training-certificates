@@ -98,3 +98,14 @@ Lets take LLama 3 70B as example and use BF16 precision:
 <img width="726" height="564" alt="image" src="https://github.com/user-attachments/assets/aef03bee-c1a2-4eda-bf0e-7f1d681c80ae" />
 
 Managing the KV cache is the singlest biggest job of a production inference server
+
+> [!INFO]
+> The Q,K,V, the KV cache and the model weigts are all tensors
+
+### GPU Memory Hierarchy
+
+HBM = High Bandwidth Memory
+SRAM = Static RAM
+
+<img width="804" height="558" alt="image" src="https://github.com/user-attachments/assets/50af2e29-86aa-4785-b334-8fb635250774" />
+
