@@ -97,4 +97,4 @@ Lets take LLama 3 70B as example and use BF16 precision:
 
 <img width="726" height="564" alt="image" src="https://github.com/user-attachments/assets/aef03bee-c1a2-4eda-bf0e-7f1d681c80ae" />
 
-
+Managing the KV cache is the singlest biggest job of a production inference server
