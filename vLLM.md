@@ -99,7 +99,7 @@ Lets take LLama 3 70B as example and use BF16 precision:
 
 Managing the KV cache is the singlest biggest job of a production inference server
 
-> [!INFO]
+> [!NOTE]
 > The Q,K,V, the KV cache and the model weigts are all tensors
 
 ### GPU Memory Hierarchy
