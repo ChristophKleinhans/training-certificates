@@ -1,4 +1,4 @@
-From deeplearning.ai (https://learn.deeplearning.ai/courses/fast-and-efficient-llm-inference-with-vllm/) the *Fast & Efficient LLM Inference with vLLM* training
+From deeplearning.ai [LINK](https://learn.deeplearning.ai/courses/fast-and-efficient-llm-inference-with-vllm/) the *Fast & Efficient LLM Inference with vLLM* training
 
 # Fast & Efficient LLM Inference with vLLM
 
