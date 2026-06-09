@@ -144,4 +144,19 @@ Removes unnecessary weights
 
 - **Weight only quantization (ex. W8A16)**: The weights are INT8 and during inference the activation remain BF16. Less data to pull between VRAM and SRAM but NO tensor core speedup, because the matrix multiplication needs to be done with the same precision BF16xBF16.
 - **Weight & Activation Quantization (ex. W8A8)**: Reduces data from HBM to SRAM and ALSO use tensor cores with more FLOPS (Floating point operations per second)
+
+### GPTQ and AWQ
+
+**GPTQ** (Generative Pre-trained Transformer Quantization) is a post-training weight quantization method that compresses model weights to low precision, typically 4-bit. It works layer by layer, quantizing weights one column at a time while using second-order (Hessian) information to adjust the remaining unquantized weights so they compensate for the error introduced. This greedy error-correction approach lets GPTQ push down to 3–4 bits with relatively little accuracy loss, and because it only needs a small calibration dataset and a single pass, it is fast and reproducible. (A calibration dataset is a small set of sample text run through the model during quantization so the algorithm can observe the real distribution of weights and activations and pick quantization parameters that minimize error on data resembling actual use.) The result is a model whose per-token weight reads from VRAM shrink roughly fourfold versus FP16, directly easing the memory-bandwidth bottleneck that dominates decode.
+
+**AWQ** (Activation-aware Weight Quantization) takes a different angle: instead of correcting errors after the fact, it identifies which weight channels matter most by observing the magnitude of the *activations* that flow through them. A small fraction of "salient" channels disproportionately affect output quality, so AWQ scales those channels before quantization to protect them, leaving the rest to be quantized normally. This activation-aware scaling avoids the need for expensive Hessian computation and tends to generalize better across domains, often preserving accuracy slightly better than GPTQ at the same bit width. Both methods land in the same place practically — 4-bit weights, ~4× less bandwidth per token — but AWQ leans on activation statistics while GPTQ leans on weight-error correction.
+
+---
+
+## Coding Example
+
+- Using `llm-compressor` library in python to apply GPTQ to produce W4A16 quantized model. The lib is a toolkit from the vLLM project.
+- The core API is `oneshot` in `llm-compressor`
 - 
+
+
