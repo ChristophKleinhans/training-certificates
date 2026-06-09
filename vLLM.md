@@ -167,6 +167,7 @@ Removes unnecessary weights
 
 - Using `llm-compressor` library in python to apply GPTQ to produce W4A16 quantized model. The lib is a toolkit from the vLLM project.
 - The core API is `oneshot` in `llm-compressor`
-- 
+- Defining the recipe which Quantization Modifiers we want to use etc.
+- Using `calculate_perplexity` to calculate the perplexity metric, which show much the modles differ
 
 
