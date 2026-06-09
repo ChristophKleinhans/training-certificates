@@ -153,7 +153,7 @@ Removes unnecessary weights
 
 **Round-to-nearest** Rounds each weight independently and moves on. Fast, needs no data, but the errors accumulate across millions of weights and degrade accuracy — especially below 8-bit.
 
-**Sparse-GPT** Is a one-shot pruning method from the same research line as GPTQ (Frantar and Alistarh), and it shares GPTQ's core machinery — the difference is that instead of rounding weights to a low-precision grid, it removes weights entirely by setting them to zero. It can prune a large language model to around 50% sparsity in a single pass, with no retraining, while keeping accuracy loss small.
+**Sparse-GPT** Is a one-shot pruning method from the same research line as GPTQ (Frantar and Alistarh), and it shares GPTQ's core machinery — the difference is that instead of rounding weights to a low-precision grid, it removes weights entirely by setting them to zero. It can prune a large language model to around 50% sparsity in a single pass, with no retraining, while keeping accuracy loss small. Pruning only pays off if the hardware and kernels can actually skip the zeros — unstructured sparsity is hard to exploit on GPUs, which is why SparseGPT also supports structured patterns like 2:4 (two zeros in every block of four), a format NVIDIA's Ampere and later Tensor cores can accelerate directly. Without that structured support, the zeros still occupy memory and bandwidth, and the speedup doesn't materialize.
 
 ---
 
