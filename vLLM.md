@@ -185,10 +185,19 @@ Removes unnecessary weights
 - For LLMs with different input length static batching is not efficient
 <img width="412" height="206" alt="image" src="https://github.com/user-attachments/assets/5913ebf5-8b6a-4a2e-8cc0-b1d18f602f3f" />
 
-**Solution Continuous Batching** The scheduler works at the token generation iteration level, thus when a requests finishes, a new request immediately replaces it in the batch.
+**Solution Continuous Batching** The scheduler works at the token generation iteration level, thus when a requests finishes, a new request immediately replaces it in the batch. No GPU slot is idle:
 
 <img width="407" height="258" alt="image" src="https://github.com/user-attachments/assets/745fb676-a563-4e25-9cf5-3d60ef62c1bd" />
 
+### KV Cache memory optimization
+
+- KV cache is dynamic and grows with every token
+- Unknown size per user
+
+**Earlier Systems**
+- The KV cache got one allocated block size to the maximum possible length
+- Most time only 20-40% of KV cache memory is actually used to store tokens
+<img width="1208" height="195" alt="image" src="https://github.com/user-attachments/assets/038c199d-c7fb-41a3-be26-0f513d9fe9c8" />
 
 
 
