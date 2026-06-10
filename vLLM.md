@@ -170,4 +170,25 @@ Removes unnecessary weights
 - Defining the recipe which Quantization Modifiers we want to use etc.
 - Using `calculate_perplexity` to calculate the perplexity metric, which show much the modles differ
 
+---
+
+## Efficient LLM serving
+
+### Continous Batching
+
+- Each token requires a full forward pass, by pulling all models weigts from HBM to GPU SRAM compute units. Serving only one request at the time, leaves the GPU dramatically unutilized.
+- Tiny compute per token vs. huge cost of moving weights: tensor core sits idle
+
+**Solution Static Batching** Batching, processing multiple requests together. Means we Load the weights once from HBM and use them for many users at the same time
+- Static Batching processes a fixed group of requests together until all finished and then start the next batch
+- Static Batching works well for models like BERT or YOLO where there input and output sizes are predictable, means every requests takes about the same amount of time
+- For LLMs with different input length static batching is not efficient
+<img width="412" height="206" alt="image" src="https://github.com/user-attachments/assets/5913ebf5-8b6a-4a2e-8cc0-b1d18f602f3f" />
+
+**Solution Continuous Batching** The scheduler works at the token generation iteration level, thus when a requests finishes, a new request immediately replaces it in the batch.
+
+<img width="407" height="258" alt="image" src="https://github.com/user-attachments/assets/745fb676-a563-4e25-9cf5-3d60ef62c1bd" />
+
+
+
 
