@@ -199,5 +199,10 @@ Removes unnecessary weights
 - Most time only 20-40% of KV cache memory is actually used to store tokens
 <img width="1208" height="195" alt="image" src="https://github.com/user-attachments/assets/038c199d-c7fb-41a3-be26-0f513d9fe9c8" />
 
-
+**Solution: PagedAttention**
+- vLLM introduced this solution
+- Small blocks (pages) are saved scattered across the GPU memory and there is a *Block table* which is a lookup table to stitch together all the blocks when needed
+- When a block is sometimes not completely filled, it can be easily updated so it uses all slots in the block
+- Every sequence (a sequence is one generation trajectory, a single stream of tokens being produced) gets a block table?
+<img width="1324" height="467" alt="image" src="https://github.com/user-attachments/assets/800b892a-a6c6-4fe4-be2c-d3e130d1b4f3" />
 
