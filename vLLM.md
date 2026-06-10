@@ -206,3 +206,6 @@ Removes unnecessary weights
 - Every sequence (a sequence is one generation trajectory, a single stream of tokens being produced) gets a block table?
 <img width="1324" height="467" alt="image" src="https://github.com/user-attachments/assets/800b892a-a6c6-4fe4-be2c-d3e130d1b4f3" />
 
+**Other Solution: Prefix Caching**
+- Like caching the system prompt only once for every user who hits the system prompt instead of recompute it for every user.
+<img width="1359" height="524" alt="image" src="https://github.com/user-attachments/assets/57107cc6-d5cd-4b8c-b9ab-b71679eb6c28" />
