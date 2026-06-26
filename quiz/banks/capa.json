@@ -1348,6 +1348,426 @@
       ],
       "answer": 0,
       "explanation": "Triggering an Argo Workflow (event-driven CI) or creating a K8s resource (e.g. an Argo CD sync) are the headline trigger types; many others exist."
+    },
+    {
+      "id": "cd-32",
+      "type": "single",
+      "category": "Argo CD · Fundamentals",
+      "stem": "What `apiVersion` do Argo CD's custom resources (Application, AppProject, ApplicationSet) use?",
+      "options": [
+        "argoproj.io/v1alpha1",
+        "apps/v1",
+        "argocd.argoproj.io/v1",
+        "v1"
+      ],
+      "answer": 0,
+      "explanation": "All Argo project CRDs — including Argo CD's Application/AppProject/ApplicationSet — use the group/version `argoproj.io/v1alpha1`."
+    },
+    {
+      "id": "cd-33",
+      "type": "single",
+      "category": "Argo CD · Fundamentals",
+      "stem": "Which `kind` is the core Argo CD object that declares what to deploy and where?",
+      "options": [
+        "Application",
+        "Deployment",
+        "Rollout",
+        "Workflow"
+      ],
+      "answer": 0,
+      "explanation": "An `Application` (argoproj.io/v1alpha1) pairs a `source` (Git/Helm/Kustomize) with a `destination` (cluster + namespace). Rollout and Workflow belong to other Argo projects."
+    },
+    {
+      "id": "cd-34",
+      "type": "single",
+      "category": "Argo CD · Applications & ApplicationSets",
+      "stem": "In an Argo CD `Application` spec, which field specifies WHERE to deploy (the target cluster and namespace)?",
+      "options": [
+        "destination",
+        "source",
+        "project",
+        "syncPolicy"
+      ],
+      "answer": 0,
+      "explanation": "`spec.destination` holds `server` (or `name`) and `namespace`. `spec.source` is where manifests come from; `project` ties the app to an AppProject."
+    },
+    {
+      "id": "cd-35",
+      "type": "single",
+      "category": "Argo CD · Applications & ApplicationSets",
+      "stem": "In this source block, which field selects the Git branch, tag, or commit to deploy?\n\n```\nsource:\n  repoURL: https://github.com/example/app.git\n  targetRevision: main\n  path: manifests\n```",
+      "options": [
+        "targetRevision",
+        "repoURL",
+        "path",
+        "revisionHistoryLimit"
+      ],
+      "answer": 0,
+      "explanation": "`targetRevision` is the branch/tag/commit (e.g. `main`, `v1.2.0`, `HEAD`). `repoURL` is the repository; `path` is the folder within it."
+    },
+    {
+      "id": "cd-36",
+      "type": "single",
+      "category": "Argo CD · Synchronization",
+      "stem": "Given this Application sync policy, what will Argo CD do?\n\n```\nsyncPolicy:\n  automated:\n    prune: true\n    selfHeal: true\n```",
+      "options": [
+        "Auto-apply Git changes, delete resources removed from Git, and revert manual cluster edits back to Git",
+        "Require a manual sync for every change",
+        "Only create resources, never delete or correct them",
+        "Sync once and then stop reconciling"
+      ],
+      "answer": 0,
+      "explanation": "The `automated` block enables auto-sync; `prune: true` deletes resources no longer in Git; `selfHeal: true` reverts out-of-band cluster changes back to Git."
+    },
+    {
+      "id": "cd-37",
+      "type": "single",
+      "category": "Argo CD · Synchronization",
+      "stem": "Which annotation controls the order in which resources are applied within a sync phase (ascending)?",
+      "options": [
+        "argocd.argoproj.io/sync-wave",
+        "argocd.argoproj.io/hook",
+        "argocd.argoproj.io/compare-options",
+        "argocd.argoproj.io/refresh"
+      ],
+      "answer": 0,
+      "explanation": "`argocd.argoproj.io/sync-wave` orders resources within a phase; lower (including negative) waves apply first, each waited on for health before the next."
+    },
+    {
+      "id": "cd-38",
+      "type": "single",
+      "category": "Argo CD · Synchronization",
+      "stem": "When does this Job run during a sync?\n\n```\nkind: Job\nmetadata:\n  annotations:\n    argocd.argoproj.io/hook: PreSync\n```",
+      "options": [
+        "Before the main manifests are applied",
+        "After all Sync-phase resources are healthy",
+        "Only if the sync fails",
+        "It is never applied to the cluster"
+      ],
+      "answer": 0,
+      "explanation": "The `argocd.argoproj.io/hook: PreSync` annotation runs the Job in the PreSync phase — before the main apply (e.g. DB migrations)."
+    },
+    {
+      "id": "cd-39",
+      "type": "single",
+      "category": "Argo CD · Applications & ApplicationSets",
+      "stem": "Which `kind` constrains which repos, clusters/namespaces, and resource kinds a set of Applications may use (multi-tenancy guardrails)?",
+      "options": [
+        "AppProject",
+        "ApplicationSet",
+        "Application",
+        "AppDeployment"
+      ],
+      "answer": 0,
+      "explanation": "An `AppProject` defines `sourceRepos`, `destinations`, and resource whitelists — the basis for multi-tenancy."
+    },
+    {
+      "id": "cd-40",
+      "type": "single",
+      "category": "Argo CD · Applications & ApplicationSets",
+      "stem": "Which `kind` templates many Applications from a generator?",
+      "options": [
+        "ApplicationSet",
+        "AppProject",
+        "Application",
+        "CronApplication"
+      ],
+      "answer": 0,
+      "explanation": "An `ApplicationSet` uses a generator plus a template to produce many Applications from one object."
+    },
+    {
+      "id": "cd-41",
+      "type": "single",
+      "category": "Argo CD · Applications & ApplicationSets",
+      "stem": "Which `metadata.finalizers` entry makes deleting an Application also prune its live resources?",
+      "options": [
+        "resources-finalizer.argocd.argoproj.io",
+        "kubernetes.io/pv-protection",
+        "argocd.argoproj.io/sync-wave",
+        "foregroundDeletion"
+      ],
+      "answer": 0,
+      "explanation": "Adding the `resources-finalizer.argocd.argoproj.io` finalizer triggers a cascading delete of the app's resources; without it they keep running."
+    },
+    {
+      "id": "wf-35",
+      "type": "single",
+      "category": "Argo Workflows · Fundamentals",
+      "stem": "What are the `apiVersion` and `kind` of a basic Argo Workflows job object?",
+      "options": [
+        "apiVersion: argoproj.io/v1alpha1, kind: Workflow",
+        "apiVersion: batch/v1, kind: Job",
+        "apiVersion: argoproj.io/v1, kind: WorkflowJob",
+        "apiVersion: apps/v1, kind: Workflow"
+      ],
+      "answer": 0,
+      "explanation": "A Workflow is `argoproj.io/v1alpha1`, `kind: Workflow`. Related kinds in the same group are `CronWorkflow` and `WorkflowTemplate`."
+    },
+    {
+      "id": "wf-36",
+      "type": "single",
+      "category": "Argo Workflows · Spec",
+      "stem": "In a Workflow spec, which field names the template that runs first?",
+      "options": [
+        "entrypoint",
+        "templates",
+        "arguments",
+        "serviceAccountName"
+      ],
+      "answer": 0,
+      "explanation": "`spec.entrypoint` selects the first template to execute — the workflow's 'main'."
+    },
+    {
+      "id": "wf-37",
+      "type": "single",
+      "category": "Argo Workflows · Spec",
+      "stem": "In this Workflow, where is the list of reusable 'functions' the workflow can run?\n\n```\nspec:\n  entrypoint: main\n  templates:\n    - name: main\n      steps: [...]\n    - name: worker\n      container: {...}\n```",
+      "options": [
+        "spec.templates",
+        "spec.entrypoint",
+        "spec.arguments",
+        "spec.containers"
+      ],
+      "answer": 0,
+      "explanation": "`spec.templates` is the list of templates; `entrypoint` only names which one runs first."
+    },
+    {
+      "id": "wf-38",
+      "type": "single",
+      "category": "Argo Workflows · Spec",
+      "stem": "In this `steps` template, which steps run IN PARALLEL?\n\n```\nsteps:\n  - - name: a\n      template: t\n    - name: b\n      template: t\n  - - name: c\n      template: t\n```",
+      "options": [
+        "a and b (they share one stage); c runs after them",
+        "a, b, and c all run in parallel",
+        "a, then b, then c — strictly sequential",
+        "b and c run in parallel; a runs first"
+      ],
+      "answer": 0,
+      "explanation": "Steps listed under the same `- -` (a and b) run in parallel as one stage; a new `- -` (c) starts the next sequential stage."
+    },
+    {
+      "id": "wf-39",
+      "type": "single",
+      "category": "Argo Workflows · Templates",
+      "stem": "Which of these templates is a WORKER (does work / spawns a pod) rather than an orchestrator?\n\n```\n- name: pipeline\n  dag: {...}\n- name: run-it\n  container:\n    image: alpine:3.20\n```",
+      "options": [
+        "run-it — it has a `container:`",
+        "pipeline — it has a `dag:`",
+        "Both are orchestrators",
+        "Both are workers"
+      ],
+      "answer": 0,
+      "explanation": "`container:` (and `script:`) are worker templates that run pods; `steps:`/`dag:` are orchestrators that only coordinate other templates."
+    },
+    {
+      "id": "wf-40",
+      "type": "single",
+      "category": "Argo Workflows · DAGs",
+      "stem": "Given this DAG task, when does `D` run?\n\n```\n- name: D\n  depends: 'B && C'\n  template: echo\n```",
+      "options": [
+        "Only after both B and C have succeeded",
+        "After either B or C finishes",
+        "Immediately, before B and C",
+        "Only if B and C both failed"
+      ],
+      "answer": 0,
+      "explanation": "`depends` is a boolean expression; `'B && C'` requires both upstream tasks to succeed (a bare task name implies its `.Succeeded`)."
+    },
+    {
+      "id": "wf-41",
+      "type": "single",
+      "category": "Argo Workflows · Artifacts",
+      "stem": "Which `inputs`/`outputs` keys carry small strings versus files/directories, respectively?",
+      "options": [
+        "parameters (strings) and artifacts (files/directories)",
+        "artifacts (strings) and parameters (files)",
+        "values (strings) and files (directories)",
+        "data (strings) and blobs (files)"
+      ],
+      "answer": 0,
+      "explanation": "`inputs/outputs.parameters` pass small strings (held in the Workflow object); `inputs/outputs.artifacts` pass files/dirs via the artifact repository."
+    },
+    {
+      "id": "wf-42",
+      "type": "single",
+      "category": "Argo Workflows · Data processing",
+      "stem": "An earlier `split` step prints a JSON array of 4 elements to stdout. How many `process-chunk` pods does this `withParam` loop create?\n\n```\n- name: map\n  template: process-chunk\n  withParam: '{{steps.split.outputs.result}}'\n```",
+      "options": [
+        "4 — one per element in the runtime-produced list",
+        "1 — withParam runs the template only once",
+        "0 — withParam requires a hardcoded list",
+        "It depends solely on the `parallelism` value"
+      ],
+      "answer": 0,
+      "explanation": "`withParam` fans out one instance per element of the JSON-array string it receives, so a 4-element list creates 4 `process-chunk` pods (subject to any `parallelism` cap)."
+    },
+    {
+      "id": "ro-19",
+      "type": "single",
+      "category": "Argo Rollouts · Fundamentals",
+      "stem": "What are the `apiVersion` and `kind` of the core Argo Rollouts object?",
+      "options": [
+        "apiVersion: argoproj.io/v1alpha1, kind: Rollout",
+        "apiVersion: apps/v1, kind: Deployment",
+        "apiVersion: argoproj.io/v1, kind: Canary",
+        "apiVersion: rollouts.argoproj.io/v1, kind: Rollout"
+      ],
+      "answer": 0,
+      "explanation": "A Rollout is `argoproj.io/v1alpha1`, `kind: Rollout` — a drop-in Deployment replacement that adds a `strategy` block."
+    },
+    {
+      "id": "ro-20",
+      "type": "single",
+      "category": "Argo Rollouts · Progressive Rollout Strategies",
+      "stem": "Under a Rollout's `spec.strategy`, which two strategy blocks can you specify?",
+      "options": [
+        "canary and blueGreen",
+        "rollingUpdate and recreate",
+        "preview and active",
+        "stable and canary"
+      ],
+      "answer": 0,
+      "explanation": "`strategy.canary` and `strategy.blueGreen` are the two progressive strategies. (`stable`/`canary` are roles within the canary strategy, not strategy keys.)"
+    },
+    {
+      "id": "ro-21",
+      "type": "single",
+      "category": "Argo Rollouts · Progressive Rollout Strategies",
+      "stem": "With this canary strategy, what percentage of traffic goes to the new version during the first pause?\n\n```\nstrategy:\n  canary:\n    steps:\n      - setWeight: 20\n      - pause: { duration: 5m }\n      - setWeight: 50\n```",
+      "options": [
+        "20%",
+        "50%",
+        "100%",
+        "0% until manually promoted"
+      ],
+      "answer": 0,
+      "explanation": "`setWeight: 20` shifts 20% of traffic to the canary, then `pause` holds for 5 minutes before the next step raises it to 50%."
+    },
+    {
+      "id": "ro-22",
+      "type": "single",
+      "category": "Argo Rollouts · Progressive Rollout Strategies",
+      "stem": "Given this blue-green strategy, what happens once the new version is ready?\n\n```\nstrategy:\n  blueGreen:\n    activeService: app-active\n    previewService: app-preview\n    autoPromotionEnabled: false\n```",
+      "options": [
+        "It waits for a manual promotion before switching the active Service to the new version",
+        "It immediately switches all traffic to the new version",
+        "It gradually shifts traffic in 10% steps",
+        "It deletes the old version right away"
+      ],
+      "answer": 0,
+      "explanation": "`autoPromotionEnabled: false` holds the new version on the preview Service until someone promotes it; only then does the active Service cut over."
+    },
+    {
+      "id": "ro-23",
+      "type": "single",
+      "category": "Argo Rollouts · Progressive Rollout Strategies",
+      "stem": "Which blue-green field keeps the old ReplicaSet running for a while after the switch, to enable fast rollback?",
+      "options": [
+        "scaleDownDelaySeconds",
+        "autoPromotionSeconds",
+        "previewService",
+        "progressDeadlineSeconds"
+      ],
+      "answer": 0,
+      "explanation": "`scaleDownDelaySeconds` delays scaling down the old ReplicaSet after promotion, so traffic can be flipped back instantly if needed."
+    },
+    {
+      "id": "ro-24",
+      "type": "single",
+      "category": "Argo Rollouts · Analysis",
+      "stem": "In this AnalysisTemplate metric, what does a measurement need in order to pass?\n\n```\nmetrics:\n  - name: success-rate\n    successCondition: result[0] >= 0.95\n    failureCondition: result[0] < 0.90\n```",
+      "options": [
+        "A result of at least 0.95 (95%)",
+        "A result below 0.90",
+        "Any non-zero result",
+        "A result of exactly 0.90"
+      ],
+      "answer": 0,
+      "explanation": "`successCondition: result[0] >= 0.95` passes at 95%+; below 0.90 it fails. Values in between are neither, governed by failure/inconclusive limits."
+    },
+    {
+      "id": "ev-14",
+      "type": "single",
+      "category": "Argo Events · Fundamentals",
+      "stem": "What `apiVersion` do the Argo Events CRDs (EventSource, EventBus, Sensor) use?",
+      "options": [
+        "argoproj.io/v1alpha1",
+        "events.argoproj.io/v1",
+        "argo-events.io/v1alpha1",
+        "v1"
+      ],
+      "answer": 0,
+      "explanation": "Like the rest of the Argo family, Argo Events CRDs use the `argoproj.io/v1alpha1` group/version."
+    },
+    {
+      "id": "ev-15",
+      "type": "multi",
+      "category": "Argo Events · Components & architecture",
+      "stem": "Which `kind`s are the three core Argo Events components? (Select all that apply.)",
+      "options": [
+        "EventSource",
+        "EventBus",
+        "Sensor",
+        "Application"
+      ],
+      "answer": [0, 1, 2],
+      "explanation": "EventSource → EventBus → Sensor are the three core kinds (Triggers are defined inside the Sensor). Application belongs to Argo CD."
+    },
+    {
+      "id": "ev-16",
+      "type": "single",
+      "category": "Argo Events · Components & architecture",
+      "stem": "In this Sensor dependency, what must `eventSourceName` and `eventName` match?\n\n```\ndependencies:\n  - name: test-dep\n    eventSourceName: webhook\n    eventName: example\n```",
+      "options": [
+        "The name of an EventSource and the name of an event defined within it",
+        "A Kubernetes Service and its port",
+        "A trigger template and its operation",
+        "An EventBus replica and its subject"
+      ],
+      "answer": 0,
+      "explanation": "A dependency binds to events by `eventSourceName` (the EventSource's name) and `eventName` (a named event within that EventSource)."
+    },
+    {
+      "id": "ev-17",
+      "type": "single",
+      "category": "Argo Events · Components & architecture",
+      "stem": "In a Sensor spec, which section defines the actions to perform when its dependencies are satisfied?",
+      "options": [
+        "triggers",
+        "dependencies",
+        "template",
+        "eventBus"
+      ],
+      "answer": 0,
+      "explanation": "`dependencies` declares which events to await; `triggers` declares what to do (e.g. create a Workflow / K8s resource) once they are satisfied."
+    },
+    {
+      "id": "ev-18",
+      "type": "single",
+      "category": "Argo Events · Components & architecture",
+      "stem": "Which EventBus implementation does this manifest configure?\n\n```\nkind: EventBus\nspec:\n  jetstream:\n    replicas: 3\n```",
+      "options": [
+        "JetStream (the modern, recommended bus)",
+        "NATS Streaming (deprecated)",
+        "Kafka",
+        "Redis"
+      ],
+      "answer": 0,
+      "explanation": "`spec.jetstream` selects the JetStream-backed bus (recommended). Alternatives are the deprecated NATS Streaming and Kafka."
+    },
+    {
+      "id": "ev-19",
+      "type": "single",
+      "category": "Argo Events · Components & architecture",
+      "stem": "In this EventSource, what does the `webhook` key represent?\n\n```\nkind: EventSource\nspec:\n  webhook:\n    example:\n      port: '12000'\n      endpoint: /example\n```",
+      "options": [
+        "The source TYPE (one of many, e.g. webhook, s3, kafka), under which named events are defined",
+        "The name of the Sensor that will receive events",
+        "The EventBus subject to publish to",
+        "A Kubernetes Service name"
+      ],
+      "answer": 0,
+      "explanation": "Under `spec`, the first key is the source type (`webhook`, `s3`, `kafka`, …); nested under it are named events (here, `example`)."
     }
   ]
 }
