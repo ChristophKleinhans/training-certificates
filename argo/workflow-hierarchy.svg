@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 540" role="img"
+     aria-label="Argo Workflow object hierarchy: the workflow-controller creates and watches a Workflow CRD, whose steps each run in their own pod (init, main and wait containers) and exchange data through an artifact store.">
+  <style>
+    text { font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; fill: #202124; }
+    .title  { font-size: 15px; font-weight: 700; }
+    .label  { font-size: 13px; font-weight: 600; }
+    .sub    { font-size: 11px; fill: #5F6368; }
+    .ctr    { font-size: 12px; }
+    .edge   { font-size: 11px; fill: #5F6368; }
+    .pviolet{ fill: #4B3FA7; }
+    box { }
+  </style>
+
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3.2"
+            orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L7,3.2 L0,6.4 Z" fill="#5F6368"/>
+    </marker>
+  </defs>
+
+  <!-- 1. Workflow Controller -->
+  <rect x="280" y="18" width="200" height="46" rx="8" fill="#D9EFE3" stroke="#7FB99E" stroke-width="1.5"/>
+  <text class="title" x="380" y="40" text-anchor="middle">Workflow Controller</text>
+  <text class="sub"   x="380" y="56" text-anchor="middle">reconciles desired state</text>
+
+  <!-- controller -> workflow -->
+  <line x1="380" y1="64" x2="380" y2="95" stroke="#5F6368" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text class="edge" x="392" y="84" text-anchor="start">creates &amp; watches pods</text>
+
+  <!-- 2. Workflow (CRD) -->
+  <rect x="280" y="97" width="200" height="54" rx="8" fill="#E3E0F7" stroke="#4B3FA7" stroke-width="1.5"/>
+  <text class="title pviolet" x="380" y="121" text-anchor="middle">Workflow (CRD)</text>
+  <text class="sub" x="380" y="139" text-anchor="middle">kind: Workflow — one live object</text>
+
+  <!-- branch CRD -> steps -->
+  <polyline points="380,151 380,172 185,172 185,185" fill="none" stroke="#5F6368" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <polyline points="380,151 380,172 575,172 575,185" fill="none" stroke="#5F6368" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- 3. Steps -->
+  <rect x="110" y="187" width="150" height="42" rx="8" fill="#ECECFB" stroke="#9AA0A6" stroke-width="1.5"/>
+  <text class="label pviolet" x="185" y="213" text-anchor="middle">Step A</text>
+  <rect x="500" y="187" width="150" height="42" rx="8" fill="#ECECFB" stroke="#9AA0A6" stroke-width="1.5"/>
+  <text class="label pviolet" x="575" y="213" text-anchor="middle">Step B</text>
+
+  <!-- step -> pod -->
+  <line x1="185" y1="229" x2="185" y2="254" stroke="#5F6368" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="575" y1="229" x2="575" y2="254" stroke="#5F6368" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- 4. Pod A (expanded) -->
+  <rect x="52" y="256" width="266" height="210" rx="10" fill="#ECECFB" stroke="#4B3FA7" stroke-width="1.5"/>
+  <text class="label pviolet" x="185" y="280" text-anchor="middle">Pod A</text>
+  <text class="sub" x="185" y="297" text-anchor="middle">one pod per step</text>
+
+  <rect x="72" y="308" width="226" height="34" rx="6" fill="#EDEDED" stroke="#C9CCCF" stroke-width="1"/>
+  <text class="ctr" x="185" y="329" text-anchor="middle">init — copies argoexec</text>
+
+  <rect x="72" y="348" width="226" height="34" rx="6" fill="#EDEDED" stroke="#C9CCCF" stroke-width="1"/>
+  <text class="ctr" x="185" y="369" text-anchor="middle">main — runs your YAML command</text>
+
+  <rect x="72" y="388" width="226" height="34" rx="6" fill="#EDEDED" stroke="#C9CCCF" stroke-width="1"/>
+  <text class="ctr" x="185" y="409" text-anchor="middle">wait — argoexec sidecar</text>
+
+  <text class="sub" x="185" y="445" text-anchor="middle">shared emptyDir volume holds argoexec</text>
+
+  <!-- 4b. Pod B (compact) -->
+  <rect x="500" y="256" width="150" height="104" rx="10" fill="#ECECFB" stroke="#4B3FA7" stroke-width="1.5"/>
+  <text class="label pviolet" x="575" y="284" text-anchor="middle">Pod B</text>
+  <text class="sub" x="575" y="308" text-anchor="middle">init · main · wait</text>
+  <text class="sub" x="575" y="328" text-anchor="middle">(same structure)</text>
+
+  <!-- 5. Artifact store -->
+  <rect x="336" y="360" width="148" height="64" rx="8" fill="#F6D9BE" stroke="#F2A65A" stroke-width="1.5"/>
+  <text class="label" x="410" y="388" text-anchor="middle">Artifact store</text>
+  <text class="sub" x="410" y="406" text-anchor="middle">S3 / GCS / Minio</text>
+
+  <!-- upload from wait, download to next pod -->
+  <line x1="298" y1="408" x2="334" y2="394" stroke="#5F6368" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text class="edge" x="316" y="384" text-anchor="middle">upload</text>
+  <line x1="486" y1="388" x2="500" y2="330" stroke="#5F6368" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text class="edge" x="492" y="360" text-anchor="start">download</text>
+
+  <!-- 6. Caption strip -->
+  <rect x="150" y="494" width="460" height="30" rx="6" fill="#D9EFE3" stroke="#7FB99E" stroke-width="1"/>
+  <text class="label" x="380" y="514" text-anchor="middle">1 Pod per step — Argo manages Pods directly (no K8s Job)</text>
+</svg>
