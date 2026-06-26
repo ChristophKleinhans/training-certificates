@@ -19,6 +19,8 @@ Covers the six exam subtopics:
   2. **Container**: This is the main container. It runs what we define in the YAML
   3. **Wait**: This is a sidecar which runs alongside the main container using the argoexec. It monitors the main container, collects output parameters and artifacts. When it finishes, it reports status back to the workflow controller.
 
+<img width="640" alt="Argo Workflow object hierarchy: controller → workflow → steps → pods → init/main/wait containers" src="workflow-hierarchy.svg" />
+
 <img width="650" height="308" alt="image" src="https://github.com/user-attachments/assets/6aa1776f-23bb-49f0-99e3-94139ab54f8f" />
 
 ---

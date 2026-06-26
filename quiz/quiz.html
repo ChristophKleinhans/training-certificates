@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CNCF Practice Exam</title>
+<style>
+  :root {
+    --bg: #eef1f5;
+    --panel: #ffffff;
+    --ink: #1f2733;
+    --muted: #5b6877;
+    --line: #d7dde5;
+    --brand: #1b3a5b;        /* PSI-ish deep blue header */
+    --brand-ink: #ffffff;
+    --accent: #2563eb;       /* selection / primary */
+    --accent-soft: #e8f0fe;
+    --ok: #1a7f4b;
+    --ok-soft: #e4f5ec;
+    --bad: #c0392b;
+    --bad-soft: #fdecea;
+    --warn: #b7791f;
+    --flag: #d97706;
+    --flag-soft: #fef3e2;
+    --shadow: 0 1px 3px rgba(16,24,40,.08), 0 1px 2px rgba(16,24,40,.06);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.5;
+  }
+  button { font-family: inherit; font-size: 1rem; cursor: pointer; }
+  code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  pre {
+    background: #f4f6f9; border: 1px solid var(--line); border-radius: 6px;
+    padding: .6rem .8rem; overflow-x: auto; font-size: .85em; margin: .5rem 0;
+  }
+  code { background: #f0f2f6; border-radius: 4px; padding: .08em .35em; font-size: .9em; }
+  pre code { background: none; padding: 0; }
+
+  /* ---------- App frame ---------- */
+  #app { min-height: 100vh; display: flex; flex-direction: column; }
+
+  .topbar {
+    background: var(--brand); color: var(--brand-ink);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: .6rem 1.1rem; gap: 1rem;
+  }
+  .topbar .title { font-weight: 600; font-size: 1.02rem; letter-spacing: .2px; }
+  .topbar .title .sub { font-weight: 400; opacity: .8; font-size: .82rem; margin-left: .5rem; }
+  .topbar-right { display: flex; align-items: center; gap: .9rem; }
+  .badge {
+    font-size: .72rem; text-transform: uppercase; letter-spacing: .6px;
+    background: rgba(255,255,255,.16); padding: .18rem .5rem; border-radius: 999px;
+  }
+  .timer {
+    font-variant-numeric: tabular-nums; font-weight: 600; font-size: 1.05rem;
+    background: rgba(255,255,255,.12); padding: .25rem .7rem; border-radius: 6px;
+  }
+  .timer.low { background: var(--bad); }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    border: 1px solid var(--line); background: #fff; color: var(--ink);
+    padding: .5rem .95rem; border-radius: 6px; font-weight: 500;
+  }
+  .btn:hover:not(:disabled) { border-color: #b9c2cd; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover:not(:disabled) { background: #1d4fd0; }
+  .btn.ghost-light { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.35); color: #fff; }
+  .btn.ghost-light:hover { background: rgba(255,255,255,.22); }
+  .btn.danger { background: var(--bad); border-color: var(--bad); color: #fff; }
+  .btn.small { padding: .32rem .7rem; font-size: .88rem; }
+
+  /* ---------- Generic content area ---------- */
+  .stage { flex: 1; display: flex; justify-content: center; padding: 1.4rem 1rem 3rem; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    box-shadow: var(--shadow); width: 100%; max-width: 860px; padding: 1.6rem 1.8rem;
+  }
+
+  /* ---------- Start screen ---------- */
+  .start h1 { font-size: 1.5rem; margin: 0 0 .3rem; }
+  .start p.lead { color: var(--muted); margin: 0 0 1.4rem; }
+  .drop {
+    border: 2px dashed var(--line); border-radius: 10px; padding: 1.6rem;
+    text-align: center; background: #fafbfd; transition: .15s;
+  }
+  .drop.drag { border-color: var(--accent); background: var(--accent-soft); }
+  .drop input[type=file] { display: none; }
+  .filelabel {
+    display: inline-block; background: var(--accent); color: #fff; padding: .55rem 1.1rem;
+    border-radius: 6px; font-weight: 600;
+  }
+  .filelabel:hover { background: #1d4fd0; }
+  .hint { color: var(--muted); font-size: .9rem; }
+  .error {
+    background: var(--bad-soft); border: 1px solid #f3c3bd; color: var(--bad);
+    border-radius: 8px; padding: .8rem 1rem; margin-top: 1rem; white-space: pre-wrap;
+  }
+  .meta {
+    margin-top: 1.3rem; border: 1px solid var(--line); border-radius: 8px; overflow: hidden;
+  }
+  .meta .meta-head { background: var(--ok-soft); color: var(--ok); padding: .6rem 1rem; font-weight: 600; }
+  .meta table { width: 100%; border-collapse: collapse; }
+  .meta td { padding: .5rem 1rem; border-top: 1px solid var(--line); }
+  .meta td:first-child { color: var(--muted); width: 45%; }
+  .options-row { display: flex; flex-wrap: wrap; gap: 1.6rem; margin: 1.4rem 0; }
+  fieldset.opt-group { border: 1px solid var(--line); border-radius: 8px; padding: .8rem 1rem; margin: 0; }
+  fieldset.opt-group legend { font-weight: 600; padding: 0 .4rem; color: var(--muted); font-size: .85rem; }
+  .opt-group label { display: flex; align-items: center; gap: .5rem; padding: .25rem 0; cursor: pointer; }
+  .startbar { display: flex; justify-content: flex-end; gap: .8rem; margin-top: 1.5rem; }
+
+  /* ---------- Question screen ---------- */
+  .qbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: .55rem 1.1rem; background: #f7f9fc; border-bottom: 1px solid var(--line);
+  }
+  .qcount { font-weight: 600; }
+  .qcat { color: var(--muted); font-size: .85rem; margin-left: .6rem; font-weight: 400; }
+  .flagbtn {
+    display: inline-flex; align-items: center; gap: .4rem; border: 1px solid var(--line);
+    background: #fff; border-radius: 6px; padding: .35rem .7rem; font-size: .9rem; color: var(--muted);
+  }
+  .flagbtn.on { background: var(--flag-soft); border-color: var(--flag); color: var(--flag); font-weight: 600; }
+
+  .stem { font-size: 1.12rem; margin: 0 0 .3rem; }
+  .selnote { color: var(--muted); font-size: .88rem; margin: 0 0 1.1rem; }
+  .answers { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .6rem; }
+  .answer {
+    display: flex; gap: .8rem; align-items: flex-start; border: 1px solid var(--line);
+    border-radius: 8px; padding: .75rem .9rem; cursor: pointer; background: #fff; transition: .12s;
+  }
+  .answer:hover { border-color: #b9c2cd; background: #fafbfd; }
+  .answer.selected { border-color: var(--accent); background: var(--accent-soft); }
+  .answer input { margin-top: .25rem; flex: none; width: 1.05rem; height: 1.05rem; }
+  .answer .letter { font-weight: 700; color: var(--muted); flex: none; min-width: 1.2rem; }
+  .answer.selected .letter { color: var(--accent); }
+  .answer.correct { border-color: var(--ok); background: var(--ok-soft); }
+  .answer.wrong { border-color: var(--bad); background: var(--bad-soft); }
+  .answer .mark { margin-left: auto; font-weight: 700; flex: none; }
+  .answer.correct .mark { color: var(--ok); }
+  .answer.wrong .mark { color: var(--bad); }
+  .answer.locked { cursor: default; }
+  .answer.locked:hover { background: inherit; }
+
+  .explain {
+    margin-top: 1.1rem; border-left: 4px solid var(--accent); background: #f6f9ff;
+    padding: .7rem 1rem; border-radius: 0 6px 6px 0;
+  }
+  .explain.correct { border-color: var(--ok); background: var(--ok-soft); }
+  .explain.wrong { border-color: var(--bad); background: var(--bad-soft); }
+  .explain b { display: block; margin-bottom: .2rem; }
+
+  .qfooter {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: .8rem 1.1rem; border-top: 1px solid var(--line); background: #f7f9fc;
+  }
+  .qfooter .mid { display: flex; gap: .6rem; }
+
+  /* ---------- Navigator / review grid ---------- */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(16,24,40,.45);
+    display: flex; align-items: center; justify-content: center; padding: 1rem; z-index: 50;
+  }
+  .modal { background: #fff; border-radius: 10px; max-width: 720px; width: 100%; max-height: 86vh; overflow: auto; box-shadow: 0 12px 40px rgba(0,0,0,.25); }
+  .modal-head { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.2rem; border-bottom: 1px solid var(--line); }
+  .modal-head h2 { margin: 0; font-size: 1.15rem; }
+  .modal-body { padding: 1.2rem; }
+  .legend { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; font-size: .85rem; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: .4rem; }
+  .swatch { width: .9rem; height: .9rem; border-radius: 3px; border: 1px solid var(--line); display: inline-block; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(2.6rem, 1fr)); gap: .5rem; }
+  .cell {
+    aspect-ratio: 1 / 1; border: 1px solid var(--line); border-radius: 6px; background: #fff;
+    font-weight: 600; font-size: .9rem; display: flex; align-items: center; justify-content: center;
+    position: relative; color: var(--ink);
+  }
+  .cell:hover { border-color: #97a3b0; }
+  .cell.answered { background: var(--accent-soft); border-color: #b6cdf7; color: var(--accent); }
+  .cell.flagged::after {
+    content: ""; position: absolute; top: -3px; right: -3px; width: .55rem; height: .55rem;
+    background: var(--flag); border-radius: 50%; border: 1px solid #fff;
+  }
+  .cell.current { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .cell.correct { background: var(--ok-soft); border-color: #b7e0c6; color: var(--ok); }
+  .cell.incorrect { background: var(--bad-soft); border-color: #f1c1ba; color: var(--bad); }
+
+  /* ---------- Review screen ---------- */
+  .review-stats { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0 1.4rem; }
+  .stat { flex: 1; min-width: 7rem; border: 1px solid var(--line); border-radius: 8px; padding: .8rem 1rem; text-align: center; }
+  .stat .num { font-size: 1.6rem; font-weight: 700; }
+  .stat .lbl { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .5px; }
+  .stat.warn .num { color: var(--flag); }
+
+  /* ---------- Results ---------- */
+  .verdict { text-align: center; border-radius: 10px; padding: 1.6rem; margin-bottom: 1.4rem; }
+  .verdict.pass { background: var(--ok-soft); border: 1px solid #b7e0c6; }
+  .verdict.fail { background: var(--bad-soft); border: 1px solid #f1c1ba; }
+  .verdict .score { font-size: 3rem; font-weight: 800; line-height: 1; }
+  .verdict.pass .score { color: var(--ok); }
+  .verdict.fail .score { color: var(--bad); }
+  .verdict .label { font-size: 1.3rem; font-weight: 700; margin-top: .3rem; }
+  .verdict.pass .label { color: var(--ok); }
+  .verdict.fail .label { color: var(--bad); }
+  .verdict .detail { color: var(--muted); margin-top: .4rem; }
+
+  table.breakdown { width: 100%; border-collapse: collapse; margin: 1rem 0 1.6rem; }
+  table.breakdown th, table.breakdown td { text-align: left; padding: .5rem .7rem; border-bottom: 1px solid var(--line); }
+  table.breakdown th { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .4px; }
+  table.breakdown td.pct { font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+  .bar { height: 8px; border-radius: 4px; background: #edf0f4; overflow: hidden; margin-top: .25rem; }
+  .bar > i { display: block; height: 100%; background: var(--accent); }
+
+  .qreview { border: 1px solid var(--line); border-radius: 8px; margin: .7rem 0; overflow: hidden; }
+  .qreview > summary { padding: .7rem 1rem; cursor: pointer; display: flex; gap: .6rem; align-items: baseline; }
+  .qreview > summary::-webkit-details-marker { display: none; }
+  .qreview .tag { flex: none; font-size: .72rem; font-weight: 700; padding: .12rem .5rem; border-radius: 999px; text-transform: uppercase; letter-spacing: .4px; }
+  .qreview .tag.correct { background: var(--ok-soft); color: var(--ok); }
+  .qreview .tag.incorrect { background: var(--bad-soft); color: var(--bad); }
+  .qreview .tag.skipped { background: #eceff3; color: var(--muted); }
+  .qreview .body { padding: 0 1rem 1rem; }
+
+  .row-actions { display: flex; gap: .8rem; justify-content: center; margin-top: 1.6rem; }
+
+  .footer-note { text-align: center; color: var(--muted); font-size: .8rem; padding: 1rem; }
+  @media (max-width: 560px) {
+    .card { padding: 1.1rem; }
+    .topbar { flex-direction: column; align-items: flex-start; gap: .5rem; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   CNCF practice-exam tool — single-file, zero dependency.
+   Loads a JSON question bank and runs a PSI-style quiz.
+   ============================================================ */
+
+const CONFIG = {
+  // Real CNCF/PSI multiple-choice exams score multi-answer questions
+  // all-or-nothing (the exact correct set, no more/no less). Flip to
+  // true to award partial credit in study contexts.
+  partialCreditMulti: false,
+};
+
+// ---- Application state -------------------------------------------------
+let state = null;
+
+function freshState() {
+  return {
+    screen: "start",         // 'start' | 'question' | 'review' | 'results'
+    bank: null,              // normalized bank { meta, questions[] }
+    fileName: null,
+    loadError: null,
+    // run config (chosen on the start screen)
+    mode: "exam",            // 'exam' | 'study'
+    shuffleQuestions: false,
+    shuffleOptions: false,
+    // run state
+    order: [],               // display order: array of original question indices
+    optionOrders: {},        // qid -> display order of original option indices
+    currentPos: 0,           // pointer into `order`
+    answers: {},             // qid -> origIndex (single) | [origIndex,...] (multi)
+    flagged: {},             // qid -> true
+    checked: {},             // qid -> true (study mode: answer revealed)
+    remainingSeconds: 0,
+    timerId: null,
+    submitted: false,
+    navOpen: false,
+  };
+}
+
+// ---- Bank loading & validation ----------------------------------------
+
+function normalizeBank(raw, fileName) {
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error("Top level must be a JSON object with a \"questions\" array.");
+  }
+  if (!Array.isArray(raw.questions) || raw.questions.length === 0) {
+    throw new Error("\"questions\" must be a non-empty array.");
+  }
+
+  const meta = {
+    title: typeof raw.title === "string" && raw.title.trim() ? raw.title.trim() : (fileName || "Practice exam"),
+    cert: typeof raw.cert === "string" ? raw.cert.trim() : "",
+    timeLimitMinutes: Number.isFinite(raw.timeLimitMinutes) && raw.timeLimitMinutes > 0 ? raw.timeLimitMinutes : 90,
+    passingScore: Number.isFinite(raw.passingScore) && raw.passingScore > 0 ? raw.passingScore : 75,
+    version: typeof raw.version === "string" ? raw.version : "",
+  };
+
+  const seenIds = new Set();
+  const questions = raw.questions.map((q, i) => {
+    const where = "Question " + (i + 1);
+    if (q === null || typeof q !== "object" || Array.isArray(q)) {
+      throw new Error(where + ": each question must be an object.");
+    }
+    if (typeof q.stem !== "string" || !q.stem.trim()) {
+      throw new Error(where + ": missing \"stem\" text.");
+    }
+    if (!Array.isArray(q.options) || q.options.length < 2) {
+      throw new Error(where + ": needs an \"options\" array with at least 2 entries.");
+    }
+    q.options.forEach((o, oi) => {
+      if (typeof o !== "string") throw new Error(where + ": option " + (oi + 1) + " must be a string.");
+    });
+
+    // infer / validate type
+    let type = q.type;
+    if (type !== "single" && type !== "multi") {
+      type = Array.isArray(q.answer) ? "multi" : "single";
+    }
+
+    // validate answer shape & indices
+    let answer;
+    const n = q.options.length;
+    if (type === "single") {
+      if (!Number.isInteger(q.answer)) {
+        throw new Error(where + ": single-answer \"answer\" must be one integer index.");
+      }
+      if (q.answer < 0 || q.answer >= n) {
+        throw new Error(where + ": answer index " + q.answer + " is out of range for " + n + " options.");
+      }
+      answer = q.answer;
+    } else {
+      if (!Array.isArray(q.answer) || q.answer.length === 0) {
+        throw new Error(where + ": multi-answer \"answer\" must be a non-empty array of indices.");
+      }
+      q.answer.forEach((a) => {
+        if (!Number.isInteger(a) || a < 0 || a >= n) {
+          throw new Error(where + ": answer index " + a + " is out of range for " + n + " options.");
+        }
+      });
+      answer = Array.from(new Set(q.answer)).sort((a, b) => a - b);
+    }
+
+    let id = typeof q.id === "string" && q.id.trim() ? q.id.trim() : "q" + (i + 1);
+    if (seenIds.has(id)) id = id + "-" + (i + 1);
+    seenIds.add(id);
+
+    return {
+      id: id,
+      type: type,
+      category: typeof q.category === "string" && q.category.trim() ? q.category.trim() : "General",
+      stem: q.stem,
+      options: q.options.slice(),
+      answer: answer,
+      explanation: typeof q.explanation === "string" ? q.explanation : "",
+    };
+  });
+
+  return { meta: meta, questions: questions };
+}
+
+function loadBankFromText(text, fileName) {
+  let raw;
+  try {
+    raw = JSON.parse(text);
+  } catch (e) {
+    throw new Error("This file is not valid JSON.\n" + e.message);
+  }
+  return normalizeBank(raw, fileName);
+}
+
+// ---- Run setup ---------------------------------------------------------
+
+function shuffleInPlace(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+  }
+  return arr;
+}
+
+function startRun() {
+  const qs = state.bank.questions;
+  const order = qs.map((_, i) => i);
+  if (state.shuffleQuestions) shuffleInPlace(order);
+
+  const optionOrders = {};
+  qs.forEach((q) => {
+    const oo = q.options.map((_, i) => i);
+    if (state.shuffleOptions) shuffleInPlace(oo);
+    optionOrders[q.id] = oo;
+  });
+
+  state.order = order;
+  state.optionOrders = optionOrders;
+  state.currentPos = 0;
+  state.answers = {};
+  state.flagged = {};
+  state.checked = {};
+  state.submitted = false;
+  state.navOpen = false;
+  state.screen = "question";
+
+  if (state.mode === "exam") {
+    state.remainingSeconds = state.bank.meta.timeLimitMinutes * 60;
+    startTimer();
+  } else {
+    state.remainingSeconds = 0;
+    stopTimer();
+  }
+  render();
+}
+
+function restartRun() {
+  // keep bank + chosen mode/shuffle, re-roll order
+  stopTimer();
+  startRun();
+}
+
+function backToStart() {
+  stopTimer();
+  const bank = state.bank, fileName = state.fileName;
+  state = freshState();
+  state.bank = bank;
+  state.fileName = fileName;
+  render();
+}
+
+// ---- Timer -------------------------------------------------------------
+
+function startTimer() {
+  stopTimer();
+  state.timerId = setInterval(tick, 1000);
+}
+function stopTimer() {
+  if (state.timerId) { clearInterval(state.timerId); state.timerId = null; }
+}
+function tick() {
+  state.remainingSeconds--;
+  if (state.remainingSeconds <= 0) {
+    state.remainingSeconds = 0;
+    stopTimer();
+    submitExam(true);
+    return;
+  }
+  updateTimerDisplay();
+}
+function updateTimerDisplay() {
+  const el = document.getElementById("timer");
+  if (!el) return;
+  el.textContent = formatTime(state.remainingSeconds);
+  el.classList.toggle("low", state.remainingSeconds <= 300);
+}
+function formatTime(total) {
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const pad = (x) => String(x).padStart(2, "0");
+  return (h > 0 ? pad(h) + ":" : "") + pad(m) + ":" + pad(s);
+}
+
+// ---- Answer helpers ----------------------------------------------------
+
+function currentQuestion() {
+  return state.bank.questions[state.order[state.currentPos]];
+}
+function questionAt(pos) {
+  return state.bank.questions[state.order[pos]];
+}
+function isAnswered(q) {
+  const a = state.answers[q.id];
+  if (a === undefined || a === null) return false;
+  if (Array.isArray(a)) return a.length > 0;
+  return true;
+}
+function correctIndices(q) {
+  return q.type === "single" ? [q.answer] : q.answer;
+}
+function gradeQuestion(q) {
+  // returns 'correct' | 'incorrect' (covers unanswered) | partial-fraction for study stats
+  const a = state.answers[q.id];
+  if (q.type === "single") {
+    return a === q.answer ? 1 : 0;
+  }
+  const want = q.answer;                // sorted unique
+  const got = Array.isArray(a) ? Array.from(new Set(a)).sort((x, y) => x - y) : [];
+  if (CONFIG.partialCreditMulti) {
+    if (got.length === 0) return 0;
+    let hits = 0, wrong = 0;
+    got.forEach((g) => (want.includes(g) ? hits++ : wrong++));
+    const frac = (hits - wrong) / want.length;
+    return Math.max(0, Math.min(1, frac));
+  }
+  const exact = got.length === want.length && got.every((v, i) => v === want[i]);
+  return exact ? 1 : 0;
+}
+function isFullyCorrect(q) {
+  return gradeQuestion(q) === 1;
+}
+
+function recordSingle(q, origIdx) {
+  state.answers[q.id] = origIdx;
+}
+function toggleMulti(q, origIdx, on) {
+  let a = state.answers[q.id];
+  if (!Array.isArray(a)) a = [];
+  const set = new Set(a);
+  if (on) set.add(origIdx); else set.delete(origIdx);
+  state.answers[q.id] = Array.from(set).sort((x, y) => x - y);
+}
+
+// ---- Rendering: helpers ------------------------------------------------
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+// minimal, safe inline formatting for question text: `code` and **bold**,
+// plus fenced ```code blocks```. Everything is escaped first.
+function fmt(s) {
+  let out = esc(s);
+  out = out.replace(/```([\s\S]*?)```/g, function (_, code) {
+    return "<pre><code>" + code.replace(/^\n/, "") + "</code></pre>";
+  });
+  out = out.replace(/`([^`]+)`/g, "<code>$1</code>");
+  out = out.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  out = out.replace(/\n/g, "<br>");
+  return out;
+}
+const LETTERS = "ABCDEFGHIJKLMNOP";
+
+// ---- Rendering: screens ------------------------------------------------
+
+function render() {
+  const app = document.getElementById("app");
+  let html = "";
+  if (state.screen === "start") html = renderStart();
+  else if (state.screen === "question") html = renderQuestion();
+  else if (state.screen === "review") html = renderReview();
+  else if (state.screen === "results") html = renderResults();
+  app.innerHTML = html;
+  if (state.navOpen) app.insertAdjacentHTML("beforeend", renderNavigator());
+}
+
+function renderStart() {
+  const b = state.bank;
+  let meta = "";
+  if (b) {
+    const m = b.meta;
+    meta = `
+      <div class="meta">
+        <div class="meta-head">✓ Loaded: ${esc(state.fileName || m.title)}</div>
+        <table>
+          <tr><td>Exam</td><td>${esc(m.title)}${m.cert ? " (" + esc(m.cert) + ")" : ""}</td></tr>
+          <tr><td>Questions</td><td>${b.questions.length}</td></tr>
+          <tr><td>Time limit</td><td>${m.timeLimitMinutes} minutes</td></tr>
+          <tr><td>Passing score</td><td>${m.passingScore}%</td></tr>
+          ${m.version ? `<tr><td>Bank version</td><td>${esc(m.version)}</td></tr>` : ""}
+        </table>
+      </div>`;
+  }
+  const err = state.loadError ? `<div class="error">${esc(state.loadError)}</div>` : "";
+
+  return `
+  <div class="topbar">
+    <div class="title">CNCF Practice Exam <span class="sub">multiple-choice trainer</span></div>
+  </div>
+  <div class="stage">
+    <div class="card start">
+      <h1>Load a question bank</h1>
+      <p class="lead">Pick a <code>.json</code> bank for the certificate you're studying, choose your settings, and start a practice exam that mirrors the real PSI multiple-choice environment.</p>
+
+      <div class="drop" id="drop">
+        <p style="margin:.2rem 0 1rem">Drag a bank file here, or</p>
+        <label class="filelabel" for="fileInput">Choose a .json file</label>
+        <input type="file" id="fileInput" accept=".json,application/json" data-action="file" />
+        <p class="hint" style="margin:.9rem 0 0">e.g. <code>banks/capa.json</code></p>
+      </div>
+      ${err}
+      ${meta}
+
+      <div class="options-row">
+        <fieldset class="opt-group">
+          <legend>Mode</legend>
+          <label><input type="radio" name="mode" value="exam" data-action="mode" ${state.mode === "exam" ? "checked" : ""}/> Exam — timed, feedback at the end</label>
+          <label><input type="radio" name="mode" value="study" data-action="mode" ${state.mode === "study" ? "checked" : ""}/> Study — untimed, instant feedback</label>
+        </fieldset>
+        <fieldset class="opt-group">
+          <legend>Randomize</legend>
+          <label><input type="checkbox" data-action="shuffleQuestions" ${state.shuffleQuestions ? "checked" : ""}/> Shuffle question order</label>
+          <label><input type="checkbox" data-action="shuffleOptions" ${state.shuffleOptions ? "checked" : ""}/> Shuffle answer options</label>
+        </fieldset>
+      </div>
+
+      <div class="startbar">
+        <button class="btn primary" data-action="start" ${b ? "" : "disabled"}>Start exam →</button>
+      </div>
+    </div>
+  </div>
+  <div class="footer-note">Runs fully offline · no data leaves your browser</div>`;
+}
+
+function renderQuestion() {
+  const q = currentQuestion();
+  const total = state.order.length;
+  const m = state.bank.meta;
+  const studyChecked = state.mode === "study" && state.checked[q.id];
+  const reveal = studyChecked;
+
+  const dispOrder = state.optionOrders[q.id];
+  const correct = correctIndices(q);
+  const sel = state.answers[q.id];
+
+  const answersHtml = dispOrder.map((origIdx, pos) => {
+    const text = q.options[origIdx];
+    const checked = q.type === "single"
+      ? sel === origIdx
+      : Array.isArray(sel) && sel.includes(origIdx);
+    let cls = "answer" + (checked ? " selected" : "");
+    let mark = "";
+    if (reveal) {
+      cls += " locked";
+      const isCorrect = correct.includes(origIdx);
+      if (isCorrect) { cls += " correct"; mark = `<span class="mark">✓</span>`; }
+      else if (checked) { cls += " wrong"; mark = `<span class="mark">✗</span>`; }
+    }
+    const input = q.type === "single"
+      ? `<input type="radio" name="opt" ${checked ? "checked" : ""} ${reveal ? "disabled" : ""} data-action="opt" data-orig="${origIdx}">`
+      : `<input type="checkbox" ${checked ? "checked" : ""} ${reveal ? "disabled" : ""} data-action="opt" data-orig="${origIdx}">`;
+    return `<li class="${cls}" data-action="opt-row" data-orig="${origIdx}">
+        ${input}
+        <span class="letter">${LETTERS[pos]}</span>
+        <span class="opt-text">${fmt(text)}</span>
+        ${mark}
+      </li>`;
+  }).join("");
+
+  let explainHtml = "";
+  if (reveal && q.explanation) {
+    const ok = isFullyCorrect(q);
+    explainHtml = `<div class="explain ${ok ? "correct" : "wrong"}">
+        <b>${ok ? "Correct" : "Not quite"}</b>${fmt(q.explanation)}</div>`;
+  }
+
+  const flagged = !!state.flagged[q.id];
+  const selnote = q.type === "multi"
+    ? `Select all that apply (${correct.length} correct).`
+    : "Select the best answer.";
+
+  const timerHtml = state.mode === "exam"
+    ? `<span class="timer" id="timer">${formatTime(state.remainingSeconds)}</span>`
+    : `<span class="badge">Study mode</span>`;
+
+  const checkBtn = (state.mode === "study" && !studyChecked)
+    ? `<button class="btn" data-action="check" ${isAnswered(q) ? "" : "disabled"}>Check answer</button>`
+    : "";
+
+  const isLast = state.currentPos === total - 1;
+
+  return `
+  <div class="topbar">
+    <div class="title">${esc(m.title)}${m.cert ? ` <span class="sub">${esc(m.cert)}</span>` : ""}</div>
+    <div class="topbar-right">
+      ${timerHtml}
+      <button class="btn ghost-light small" data-action="goto-review">Review &amp; submit</button>
+    </div>
+  </div>
+
+  <div class="qbar">
+    <div><span class="qcount">Question ${state.currentPos + 1} of ${total}</span><span class="qcat">${esc(q.category)}</span></div>
+    <button class="flagbtn ${flagged ? "on" : ""}" data-action="flag">
+      ${flagged ? "★ Flagged for review" : "☆ Flag for review"}
+    </button>
+  </div>
+
+  <div class="stage">
+    <div class="card">
+      <p class="stem">${fmt(q.stem)}</p>
+      <p class="selnote">${selnote}</p>
+      <ul class="answers">${answersHtml}</ul>
+      ${checkBtn ? `<div style="margin-top:1rem">${checkBtn}</div>` : ""}
+      ${explainHtml}
+    </div>
+  </div>
+
+  <div class="qfooter">
+    <button class="btn" data-action="prev" ${state.currentPos === 0 ? "disabled" : ""}>← Previous</button>
+    <div class="mid">
+      <button class="btn" data-action="open-nav">Question navigator</button>
+    </div>
+    ${isLast
+      ? `<button class="btn primary" data-action="goto-review">Review &amp; submit →</button>`
+      : `<button class="btn" data-action="next">Next →</button>`}
+  </div>`;
+}
+
+function renderNavigator() {
+  const cells = state.order.map((qi, pos) => {
+    const q = state.bank.questions[qi];
+    let cls = "cell";
+    if (isAnswered(q)) cls += " answered";
+    if (state.flagged[q.id]) cls += " flagged";
+    if (pos === state.currentPos) cls += " current";
+    return `<button class="${cls}" data-action="nav-jump" data-pos="${pos}">${pos + 1}</button>`;
+  }).join("");
+
+  const answeredCount = state.order.filter((qi) => isAnswered(state.bank.questions[qi])).length;
+  const flaggedCount = Object.keys(state.flagged).filter((k) => state.flagged[k]).length;
+
+  return `
+  <div class="overlay" data-action="close-nav">
+    <div class="modal" data-stop="1">
+      <div class="modal-head">
+        <h2>Question navigator</h2>
+        <button class="btn small" data-action="close-nav">Close ✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="legend">
+          <span><i class="swatch" style="background:var(--accent-soft);border-color:#b6cdf7"></i> Answered (${answeredCount})</span>
+          <span><i class="swatch"></i> Unanswered (${state.order.length - answeredCount})</span>
+          <span><i class="swatch" style="background:var(--flag)"></i> Flagged (${flaggedCount})</span>
+        </div>
+        <div class="grid">${cells}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderReview() {
+  const total = state.order.length;
+  const answered = state.order.filter((qi) => isAnswered(state.bank.questions[qi])).length;
+  const unanswered = total - answered;
+  const flaggedCount = Object.keys(state.flagged).filter((k) => state.flagged[k]).length;
+
+  const cells = state.order.map((qi, pos) => {
+    const q = state.bank.questions[qi];
+    let cls = "cell";
+    if (isAnswered(q)) cls += " answered";
+    if (state.flagged[q.id]) cls += " flagged";
+    return `<button class="${cls}" data-action="nav-jump" data-pos="${pos}">${pos + 1}</button>`;
+  }).join("");
+
+  return `
+  <div class="topbar">
+    <div class="title">${esc(state.bank.meta.title)}</div>
+    <div class="topbar-right">
+      ${state.mode === "exam" ? `<span class="timer" id="timer">${formatTime(state.remainingSeconds)}</span>` : `<span class="badge">Study mode</span>`}
+    </div>
+  </div>
+  <div class="stage">
+    <div class="card">
+      <h1 style="margin-top:0">Review before submitting</h1>
+      <div class="review-stats">
+        <div class="stat"><div class="num">${answered}</div><div class="lbl">Answered</div></div>
+        <div class="stat ${unanswered ? "warn" : ""}"><div class="num">${unanswered}</div><div class="lbl">Unanswered</div></div>
+        <div class="stat"><div class="num">${flaggedCount}</div><div class="lbl">Flagged</div></div>
+      </div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--accent-soft);border-color:#b6cdf7"></i> Answered</span>
+        <span><i class="swatch"></i> Unanswered</span>
+        <span><i class="swatch" style="background:var(--flag)"></i> Flagged</span>
+      </div>
+      <div class="grid">${cells}</div>
+      <div class="row-actions">
+        <button class="btn" data-action="back-to-questions">← Back to questions</button>
+        <button class="btn primary" data-action="submit">Submit exam</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderResults() {
+  const qs = state.order.map((qi) => state.bank.questions[qi]);
+  let earned = 0;
+  qs.forEach((q) => { earned += gradeQuestion(q); });
+  const total = qs.length;
+  const pct = Math.round((earned / total) * 1000) / 10;
+  const passing = state.bank.meta.passingScore;
+  const passed = pct >= passing;
+
+  let nCorrect = 0, nIncorrect = 0, nSkipped = 0;
+  qs.forEach((q) => {
+    if (!isAnswered(q)) nSkipped++;
+    else if (isFullyCorrect(q)) nCorrect++;
+    else nIncorrect++;
+  });
+
+  // per-category breakdown
+  const cats = {};
+  qs.forEach((q) => {
+    if (!cats[q.category]) cats[q.category] = { earned: 0, total: 0 };
+    cats[q.category].total++;
+    cats[q.category].earned += gradeQuestion(q);
+  });
+  const catRows = Object.keys(cats).map((c) => {
+    const o = cats[c];
+    const p = Math.round((o.earned / o.total) * 100);
+    return `<tr>
+        <td>${esc(c)}</td>
+        <td>${Math.round(o.earned * 10) / 10} / ${o.total}<div class="bar"><i style="width:${p}%;background:${p >= passing ? "var(--ok)" : "var(--accent)"}"></i></div></td>
+        <td class="pct">${p}%</td>
+      </tr>`;
+  }).join("");
+
+  // per-question review
+  const reviewItems = qs.map((q, pos) => {
+    const answeredQ = isAnswered(q);
+    const ok = isFullyCorrect(q);
+    const tag = !answeredQ ? "skipped" : (ok ? "correct" : "incorrect");
+    const tagLabel = !answeredQ ? "Skipped" : (ok ? "Correct" : "Incorrect");
+    const correct = correctIndices(q);
+    const sel = state.answers[q.id];
+    const optList = q.options.map((text, origIdx) => {
+      const isC = correct.includes(origIdx);
+      const isSel = q.type === "single" ? sel === origIdx : (Array.isArray(sel) && sel.includes(origIdx));
+      let badge = "";
+      if (isC) badge = ` <strong style="color:var(--ok)">✓ correct</strong>`;
+      if (isSel && !isC) badge = ` <strong style="color:var(--bad)">✗ your answer</strong>`;
+      else if (isSel && isC) badge = ` <strong style="color:var(--ok)">✓ your answer</strong>`;
+      const style = isC ? "color:var(--ok)" : (isSel ? "color:var(--bad)" : "");
+      return `<li style="${style}">${LETTERS[origIdx]}. ${fmt(text)}${badge}</li>`;
+    }).join("");
+    return `<details class="qreview">
+        <summary><span class="tag ${tag}">${tagLabel}</span> <span>Q${pos + 1}. ${fmt(q.stem)}</span></summary>
+        <div class="body">
+          <ul style="padding-left:1.2rem">${optList}</ul>
+          ${q.explanation ? `<div class="explain">${fmt(q.explanation)}</div>` : ""}
+        </div>
+      </details>`;
+  }).join("");
+
+  return `
+  <div class="topbar">
+    <div class="title">${esc(state.bank.meta.title)} <span class="sub">Results</span></div>
+  </div>
+  <div class="stage">
+    <div class="card">
+      <div class="verdict ${passed ? "pass" : "fail"}">
+        <div class="score">${pct}%</div>
+        <div class="label">${passed ? "PASS" : "FAIL"}</div>
+        <div class="detail">Passing score: ${passing}% · You answered ${nCorrect} of ${total} correctly</div>
+      </div>
+
+      <div class="review-stats">
+        <div class="stat"><div class="num" style="color:var(--ok)">${nCorrect}</div><div class="lbl">Correct</div></div>
+        <div class="stat"><div class="num" style="color:var(--bad)">${nIncorrect}</div><div class="lbl">Incorrect</div></div>
+        <div class="stat ${nSkipped ? "warn" : ""}"><div class="num">${nSkipped}</div><div class="lbl">Skipped</div></div>
+      </div>
+
+      <h2 style="margin:1.4rem 0 .3rem">By topic</h2>
+      <table class="breakdown">
+        <thead><tr><th>Subtopic</th><th>Score</th><th class="pct">%</th></tr></thead>
+        <tbody>${catRows}</tbody>
+      </table>
+
+      <h2 style="margin:1.4rem 0 .3rem">Review answers</h2>
+      ${reviewItems}
+
+      <div class="row-actions">
+        <button class="btn primary" data-action="restart">Retake this exam</button>
+        <button class="btn" data-action="load-different">Load a different bank</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ---- Submit ------------------------------------------------------------
+
+function submitExam(auto) {
+  if (!auto) {
+    const total = state.order.length;
+    const unanswered = total - state.order.filter((qi) => isAnswered(state.bank.questions[qi])).length;
+    let msg = "Submit your exam and see your score?";
+    if (unanswered > 0) msg = unanswered + " question(s) are still unanswered.\n\n" + msg;
+    if (!window.confirm(msg)) return;
+  }
+  stopTimer();
+  state.submitted = true;
+  state.navOpen = false;
+  state.screen = "results";
+  if (auto) {
+    // give a beat so any in-flight UI is consistent, then notify
+    render();
+    setTimeout(() => window.alert("Time is up — your exam was submitted automatically."), 50);
+    return;
+  }
+  render();
+}
+
+// ---- Event handling (delegated) ---------------------------------------
+
+function onClick(e) {
+  const el = e.target.closest("[data-action]");
+  if (!el) return;
+  const action = el.getAttribute("data-action");
+
+  // The overlay backdrop and its Close button both carry data-action="close-nav".
+  // Only close when the backdrop itself or the Close button is clicked — clicks
+  // elsewhere inside the modal (legend, blank space) should not dismiss it.
+  if (action === "close-nav") {
+    const onBackdrop = e.target.classList && e.target.classList.contains("overlay");
+    const onCloseBtn = !!e.target.closest(".btn");
+    if (onBackdrop || onCloseBtn) { state.navOpen = false; render(); }
+    return;
+  }
+
+  switch (action) {
+    case "start": startRun(); break;
+    case "prev": if (state.currentPos > 0) { state.currentPos--; render(); } break;
+    case "next": if (state.currentPos < state.order.length - 1) { state.currentPos++; render(); } break;
+    case "flag": {
+      const q = currentQuestion();
+      state.flagged[q.id] = !state.flagged[q.id];
+      render(); break;
+    }
+    case "open-nav": state.navOpen = true; render(); break;
+    case "close-nav": state.navOpen = false; render(); break;
+    case "nav-jump": {
+      state.currentPos = parseInt(el.getAttribute("data-pos"), 10);
+      state.navOpen = false;
+      state.screen = "question";
+      render(); break;
+    }
+    case "goto-review": state.navOpen = false; state.screen = "review"; render(); break;
+    case "back-to-questions": state.screen = "question"; render(); break;
+    case "submit": submitExam(false); break;
+    case "check": {
+      const q = currentQuestion();
+      if (isAnswered(q)) { state.checked[q.id] = true; render(); }
+      break;
+    }
+    case "opt-row": {
+      // clicking the row toggles the input (label-like behavior)
+      const q = currentQuestion();
+      if (state.mode === "study" && state.checked[q.id]) break;
+      const origIdx = parseInt(el.getAttribute("data-orig"), 10);
+      if (q.type === "single") {
+        recordSingle(q, origIdx);
+      } else {
+        const cur = Array.isArray(state.answers[q.id]) && state.answers[q.id].includes(origIdx);
+        toggleMulti(q, origIdx, !cur);
+      }
+      render(); break;
+    }
+    case "restart": restartRun(); break;
+    case "load-different": backToStart(); break;
+  }
+}
+
+function onChange(e) {
+  const el = e.target.closest("[data-action]");
+  if (!el) return;
+  const action = el.getAttribute("data-action");
+  switch (action) {
+    case "file": handleFile(e.target.files && e.target.files[0]); break;
+    case "mode": state.mode = el.value; render(); break;
+    case "shuffleQuestions": state.shuffleQuestions = el.checked; break;
+    case "shuffleOptions": state.shuffleOptions = el.checked; break;
+    case "opt": {
+      // the <input> change inside a row; row handler already covers clicks,
+      // but keyboard selection (space/arrows) lands here.
+      const q = currentQuestion();
+      if (state.mode === "study" && state.checked[q.id]) break;
+      const origIdx = parseInt(el.getAttribute("data-orig"), 10);
+      if (q.type === "single") recordSingle(q, origIdx);
+      else toggleMulti(q, origIdx, el.checked);
+      render(); break;
+    }
+  }
+}
+
+function handleFile(file) {
+  if (!file) return;
+  state.fileName = file.name;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      state.bank = loadBankFromText(String(reader.result), file.name);
+      state.loadError = null;
+    } catch (err) {
+      state.bank = null;
+      state.loadError = err.message;
+    }
+    render();
+  };
+  reader.onerror = () => {
+    state.bank = null;
+    state.loadError = "Could not read the file.";
+    render();
+  };
+  reader.readAsText(file);
+}
+
+// drag & drop on the start screen
+function installDragDrop() {
+  document.addEventListener("dragover", (e) => {
+    if (state.screen !== "start") return;
+    e.preventDefault();
+    const drop = document.getElementById("drop");
+    if (drop) drop.classList.add("drag");
+  });
+  document.addEventListener("dragleave", (e) => {
+    const drop = document.getElementById("drop");
+    if (drop && !e.relatedTarget) drop.classList.remove("drag");
+  });
+  document.addEventListener("drop", (e) => {
+    if (state.screen !== "start") return;
+    e.preventDefault();
+    const drop = document.getElementById("drop");
+    if (drop) drop.classList.remove("drag");
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) handleFile(f);
+  });
+}
+
+// Optional convenience: ?bank=banks/capa.json (works only when served over HTTP;
+// silently falls back to the file picker under file://).
+function tryUrlBank() {
+  const params = new URLSearchParams(window.location.search);
+  const path = params.get("bank");
+  if (!path) return;
+  fetch(path)
+    .then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
+    .then((text) => {
+      state.bank = loadBankFromText(text, path.split("/").pop());
+      state.fileName = path.split("/").pop();
+      state.loadError = null;
+      render();
+    })
+    .catch(() => { /* file:// or missing — just use the picker */ });
+}
+
+// ---- Boot --------------------------------------------------------------
+
+function boot() {
+  state = freshState();
+  const app = document.getElementById("app");
+  app.addEventListener("click", onClick);
+  app.addEventListener("change", onChange);
+  installDragDrop();
+  render();
+  tryUrlBank();
+}
+boot();
+</script>
+</body>
+</html>
