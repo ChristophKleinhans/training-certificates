@@ -1,0 +1,211 @@
+From deeplearning.ai [LINK](https://learn.deeplearning.ai/courses/fast-and-efficient-llm-inference-with-vllm/) the *Fast & Efficient LLM Inference with vLLM* training
+
+# Fast & Efficient LLM Inference with vLLM
+
+## Memory challenge
+
+### General
+
+One a LLM generate text, it creates one token at a time and also taking into account all previous tokens. Each token's generation uses GPU memory for:
+
+1. Model weights
+2. KV cache (representing the context from these previous tokens)
+
+While the model weights are loaded once and stay fixed, the KV cache is dynamic. The KV cache grows with every token. We need to leave room for the KV cache, like 2.5 GB for 8k tokens or 10 GB for 32k tokens.
+
+### Optimizing Memory
+
+- Weights: Quantization can be used to compress the weights.
+- KV Cache: Previous methods have been reserving one big block for the KV cache even we dont know how big the KV cache will be at the end. Now with *PagedAttention* we split the KV cache in fixed size block which they can sit everywhere in memory.
+
+## Efficien LLM deplyoment
+
+### Measure LLM reliability and performance
+
+1. Accuracy SLOs:
+   - Hallucinations
+   - Off-brand responses
+1. Inference Performance SLOs
+   - Latency must not get in the way. **Time to first token (TTFT)** for the output. **Inter token latency (ITL)**, the average time between generating consectuive tokens in the output, excluding the first token. **Request latency**, the total time end to end. **Troughput**, the average number of output tokens generated per second across all requests.
+1.       
+
+### What are the hardware requirements for running a LLM
+
+1. GPU memory:
+   - Model weights have always fixed space independent of serving 1 or 100 users
+   - KV cache grows with every token in every active request
+     -   One long-context request (32k tokens) needs 10GB KV Cache, that means with 180GB I could serve 18 long-context users in parallel (32,768 tokens are about the half of the book "The Great Gatsby" when assuming that a token is about 3/4 of an English word, or 50 single-spaced pages)
+
+Unfortunately we have always tradeoffs, the tradeoff triangle for LLM deployments is between **COST - ACCURACY - PERFORMANCE**. We can pick two of them, not all three.
+
+---
+
+
+## Fundamentals
+
+### Inference
+
+The serve one or many User with an Inference API where the user ask using a prompt and get some response, we need:
+1. The model
+2. The inference server (f.i. vLLM)
+3. Hardware accelerator (f.i. nvidia GPU)
+
+### Text generation
+
+1.1. Lets pass "The quick brown" tokens to the model
+1.2. The model processes the input by a *forward pass* and predicts the next token "fox" which gets appended to the **input**
+2.1. Next run with "The quick brown fox" forward pass
+2.2. Model predicts "jumps"
+X.1. ...
+X.2. ...
+X.3. Last token is an *End of sequence token* that signals that it is done
+
+That means, that when the model is generating a 500 tokens long response, each token needs to propagate through the model, that means the model runs 500 times.
+
+> [!NOTE]
+> Not the token itself propates through the model, the vector representation of the token does.
+
+### Forward pass through the model
+
+The transformer layer has two main parts:
+1. *Self-Attention* is where token exchange information with each other
+1. *Feed-Forward Network* processes each tokens representation further
+
+At the end output goes into the LM Head which returns a score for the models internal representation for the possible next token. The highest scoring token is the prediction. Then the prediction gets appended to the input and the whole stack runs again for the next forward pass.
+
+<img width="1250" height="560" alt="image" src="https://github.com/user-attachments/assets/e5d8c7a1-630e-4b6c-a5d2-cf338a6d1453" />
+
+### Linear Layers
+
+How do the *q_proj*, *k_proj*, *v_proj*, *o_proj* layers work:
+
+<img width="824" height="151" alt="image" src="https://github.com/user-attachments/assets/eef9a2c2-4924-40c9-8b01-7010a25c9d2b" />
+
+**Q Projection**
+
+Using the query *Q4* (The four means token 4, so the token 4 is the query) and compare it agains every token so far including itself using a dot product. The higher dot product means *the token is relevant for token four*, a lower dot product means is less relevant.
+
+<img width="525" height="226" alt="image" src="https://github.com/user-attachments/assets/edabe575-e37c-4a65-87a0-fef40d4b885c" />
+
+**V Projection**
+
+Takes the weighted sum of all the value vectors using those weigts. The result is a single vector which is enriched with the context from the rest of the sequence. That vector passes through the *o_proj*
+
+<img width="472" height="264" alt="image" src="https://github.com/user-attachments/assets/9007c28b-cf2c-4752-92d8-ab37848666ca" />
+
+**The KV cache size calculation**
+As you can see in the diagrams above, we need the complete history of the Keys and Values. Because the K and V is only computed once it can be cached, only the lagtest KV is calculated.
+
+Lets take LLama 3 70B as example and use BF16 precision:
+
+<img width="726" height="564" alt="image" src="https://github.com/user-attachments/assets/aef03bee-c1a2-4eda-bf0e-7f1d681c80ae" />
+
+Managing the KV cache is the singlest biggest job of a production inference server
+
+> [!NOTE]
+> The Q,K,V, the KV cache and the model weigts are all tensors
+
+### GPU Memory Hierarchy
+
+HBM = High Bandwidth Memory
+SRAM = Static RAM
+
+<img width="804" height="558" alt="image" src="https://github.com/user-attachments/assets/50af2e29-86aa-4785-b334-8fb635250774" />
+
+The Models weigts and the KV cache live in VRAM. Every forward pass is passed to the SRAM (discarded when computations are done), means chunks of weights, chunks of KV cache and intermediate results live in SRAM.
+
+---
+
+## Compression
+
+### Quantization
+
+- LLMs are typically released in BF16 (Brain Floating Point 16 bit (2 Byte) which is more efficient than FP16)
+- Quantization often supports FP8, INT8, INT4 (FP=Floating-Point, INT=Integer)
+
+<img width="498" height="350" alt="image" src="https://github.com/user-attachments/assets/14c98439-2770-4182-9b66-8d51f10b77d9" />
+
+Quantization focuses on the linear layers of the self-attention blocks and feed-forward networks and ALSO on the input actionations. NOT the embedding layer at the start and the LM Head at the end.
+
+The *input activations* are the tensor that gets multiplied by the weights in every linear layer. For example, the tensor representation of a token which is the input for q,k and v. And/Or the weighted sum output which flows into o_proj.
+
+### Sparsification
+
+Removes unnecessary weights
+- Typically 2 of 4, where 2 out of every 4 values within a model weight tensor are set to 0 -> Reducing memory and computation cost
+
+
+### Advantages of Weight and Activation Quantization
+
+- Lower latency for data movement. Reduce data from HBM to SRAM, so not so much data needs to be moved
+- The tensor cores can do more operations per second when numbers are in lower-precision format
+
+### Quantization Schemes
+
+- **Weight only quantization (ex. W8A16)**: The weights are INT8 and during inference the activation remain BF16. Less data to pull between VRAM and SRAM but NO tensor core speedup, because the matrix multiplication needs to be done with the same precision BF16xBF16.
+- **Weight & Activation Quantization (ex. W8A8)**: Reduces data from HBM to SRAM and ALSO use tensor cores with more FLOPS (Floating point operations per second)
+
+### Quantization methods
+
+**GPTQ** (Generative Pre-trained Transformer Quantization) is a post-training weight quantization method that compresses model weights to low precision, typically 4-bit. It works layer by layer, quantizing weights one column at a time while using second-order (Hessian) information to adjust the remaining unquantized weights so they compensate for the error introduced. This greedy error-correction approach lets GPTQ push down to 3–4 bits with relatively little accuracy loss, and because it only needs a small calibration dataset and a single pass, it is fast and reproducible. (A calibration dataset is a small set of sample text run through the model during quantization so the algorithm can observe the real distribution of weights and activations and pick quantization parameters that minimize error on data resembling actual use.) The result is a model whose per-token weight reads from VRAM shrink roughly fourfold versus FP16, directly easing the memory-bandwidth bottleneck that dominates decode.
+
+**AWQ** (Activation-aware Weight Quantization) takes a different angle: instead of correcting errors after the fact, it identifies which weight channels matter most by observing the magnitude of the *activations* that flow through them. A small fraction of "salient" channels disproportionately affect output quality, so AWQ scales those channels before quantization to protect them, leaving the rest to be quantized normally. This activation-aware scaling avoids the need for expensive Hessian computation and tends to generalize better across domains, often preserving accuracy slightly better than GPTQ at the same bit width. Both methods land in the same place practically — 4-bit weights, ~4× less bandwidth per token — but AWQ leans on activation statistics while GPTQ leans on weight-error correction.
+
+**Round-to-nearest** Rounds each weight independently and moves on. Fast, needs no data, but the errors accumulate across millions of weights and degrade accuracy — especially below 8-bit.
+
+**Sparse-GPT** Is a one-shot pruning method from the same research line as GPTQ (Frantar and Alistarh), and it shares GPTQ's core machinery — the difference is that instead of rounding weights to a low-precision grid, it removes weights entirely by setting them to zero. It can prune a large language model to around 50% sparsity in a single pass, with no retraining, while keeping accuracy loss small. Pruning only pays off if the hardware and kernels can actually skip the zeros — unstructured sparsity is hard to exploit on GPUs, which is why SparseGPT also supports structured patterns like 2:4 (two zeros in every block of four), a format NVIDIA's Ampere and later Tensor cores can accelerate directly. Without that structured support, the zeros still occupy memory and bandwidth, and the speedup doesn't materialize.
+
+**SmoothQuant** tackles the problem that activations are much harder to quantize than weights, because they contain large outlier values in a few channels that blow up the quantization range. Its trick is to mathematically "smooth" the difficulty by migrating that scale from the activations into the weights — dividing the activations by a per-channel factor and multiplying the corresponding weights by the same factor, which leaves the math unchanged but makes both sides easier to quantize. This enables full 8-bit quantization of both weights and activations (W8A8), which lets the integer Tensor cores do the actual matrix multiply, helping compute-bound prefill as well as bandwidth.
+
+**SpinQuant** attacks outliers a different way: by rotating the weight and activation matrices with learned rotation matrices before quantizing. Multiplying by a rotation matrix (and its inverse on the other side) leaves the network's output mathematically identical, but it spreads the energy of those troublesome outlier channels across many dimensions, so no single channel dominates the quantization range. By learning the optimal rotations rather than using fixed ones, SpinQuant preserves accuracy well even at 4-bit weights and activations.
+
+**QuIP ("Quantization with Incoherence Processing")** works on a related insight that quantization is easiest when weights are "incoherent" — roughly, when the magnitudes are spread evenly with no extreme outliers and the important directions aren't aligned with the coordinate axes. It enforces this by multiplying the weight matrices with random orthogonal transforms that make them incoherent, quantizes in that transformed space, then undoes the transform. This incoherence processing is what allows QuIP and its successor QuIP# to push down to extreme 2-bit weight quantization while keeping the model usable — a regime where plain rounding or even GPTQ falls apart.
+
+---
+
+## Coding Example
+
+- Using `llm-compressor` library in python to apply GPTQ to produce W4A16 quantized model. The lib is a toolkit from the vLLM project.
+- The core API is `oneshot` in `llm-compressor`
+- Defining the recipe which Quantization Modifiers we want to use etc.
+- Using `calculate_perplexity` to calculate the perplexity metric, which show much the modles differ
+
+---
+
+## Efficient LLM serving
+
+### Continous Batching
+
+- Each token requires a full forward pass, by pulling all models weigts from HBM to GPU SRAM compute units. Serving only one request at the time, leaves the GPU dramatically unutilized.
+- Tiny compute per token vs. huge cost of moving weights: tensor core sits idle
+
+**Solution Static Batching** Batching, processing multiple requests together. Means we Load the weights once from HBM and use them for many users at the same time
+- Static Batching processes a fixed group of requests together until all finished and then start the next batch
+- Static Batching works well for models like BERT or YOLO where there input and output sizes are predictable, means every requests takes about the same amount of time
+- For LLMs with different input length static batching is not efficient
+<img width="412" height="206" alt="image" src="https://github.com/user-attachments/assets/5913ebf5-8b6a-4a2e-8cc0-b1d18f602f3f" />
+
+**Solution Continuous Batching** The scheduler works at the token generation iteration level, thus when a requests finishes, a new request immediately replaces it in the batch. No GPU slot is idle:
+
+<img width="407" height="258" alt="image" src="https://github.com/user-attachments/assets/745fb676-a563-4e25-9cf5-3d60ef62c1bd" />
+
+### KV Cache memory optimization
+
+- KV cache is dynamic and grows with every token
+- Unknown size per user
+
+**Earlier Systems**
+- The KV cache got one allocated block size to the maximum possible length
+- Most time only 20-40% of KV cache memory is actually used to store tokens
+<img width="1208" height="195" alt="image" src="https://github.com/user-attachments/assets/038c199d-c7fb-41a3-be26-0f513d9fe9c8" />
+
+**Solution: PagedAttention**
+- vLLM introduced this solution
+- Small blocks (pages) are saved scattered across the GPU memory and there is a *Block table* which is a lookup table to stitch together all the blocks when needed
+- When a block is sometimes not completely filled, it can be easily updated so it uses all slots in the block
+- Every sequence (a sequence is one generation trajectory, a single stream of tokens being produced) gets a block table?
+<img width="1324" height="467" alt="image" src="https://github.com/user-attachments/assets/800b892a-a6c6-4fe4-be2c-d3e130d1b4f3" />
+
+**Other Solution: Prefix Caching**
+- Like caching the system prompt only once for every user who hits the system prompt instead of recompute it for every user.
+<img width="1359" height="524" alt="image" src="https://github.com/user-attachments/assets/57107cc6-d5cd-4b8c-b9ab-b71679eb6c28" />
