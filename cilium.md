@@ -12,7 +12,7 @@ Cilium is a eBPF based CNI plugin for kubernetes. It provides Networking, securi
 - Security — Enforces network policies at L3/L4 (allow/deny policies enforced in eBPF datapath) and L7 (HTTP, gRPC, Kafka, DNS), using **identity-based security rather than IP-based!**. For external endpoints outside the cluster where cilium has no identity, Cilium does fall back to CIDR/IP-based rules.
 - Observability — Via Hubble, gives visibility into network flows, service dependencies, and L7 traffic.
 
-## Cilium Architecture
+## Cilium Architecture and the Cilium component roles
 
 <img width="674" height="505" alt="image" src="https://github.com/user-attachments/assets/4870d7e8-c431-4359-8033-9ba1ae42f08d" />
 
@@ -22,11 +22,13 @@ The two planes:
 - **Data plane (datapath)**: *Does* it: eBPF programs attached to kernel hook points forward, load-balance, enforce policy
 
 The main components:
-- *Clilium Agent*, it's a DaemonSet, one per node. The workhorse, it watches the K8s API, manages endpoints and indentities on its node. It serves also the hubble data.
+- *Clilium Agent*, it's a DaemonSet, one per node. The workhorse, it watches the K8s API, manages endpoints and indentities on its node. Compiles policy+service rules into eBPF and loads them into the kernel. It runs the hubble server.
 - *Cilium Operator*, A Deployment, once per cluster. Handles cluster wide tasks that should not run per-node. IPAM allocation, garbage collection of stale identities/CRDs, kvstore sync. (Traffic keeps flowing even if operator is briefly down)
 - *CNI plugin*, the small binary that kubelet invokes when a pod is created, it calls the agent to wire up networking
-- *eBPF datapath*, the programs the agent loads, the actual forwarding/enforcement layer
-- *Hubble*, observability, build on top (hubble server in the agent)
+- *eBPF datapath*, the programs the agent loads, the actual forwarding, load balancing policy enforcement in-kernel. Here the packets get moved.
+- *Hubble*, the Hubble server embedded in each agent, the Hubble relay (aggregates all nodes for clusterwide view) and Hubble UI/CLI
+- *Envoy proxy (L7)* An embedded proxy per node (not per pod sidecars) that the datapath transparently redirects traffic to when L7 policy/mesh features are needed
+- KVStore (etcd), optional state backend, by default the state is in the K8s API server, a dedicated etcd is only for very large clusters or Cluster Mesh
 
 The *KFStore* stores the state of identities, endpoints and policies. They live in either Kubernetes CRDs/API-Server (default it lives in k8s etcd) or an external etcd for very large clusters
 
@@ -51,3 +53,5 @@ The *IPAM mode* determines how pod CIDRs are carved up and allocated.
 4. *Cloud Provider*: Pods get read VPC IPs, that means pods are first-class citizens on the cloud network, often used by managed clusters. E.g. AWS ENI or Azure IPAM
 
 For *1* and *3* cilium allocates the IPs and for *2* and *4* the Kubernetes or the Cloud provider allocates the IPs. We need to make sure we use the correctly IPAM from the beginning, it is not changed easily afterwards.
+
+
