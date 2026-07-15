@@ -28,7 +28,7 @@ The main components:
 - *eBPF datapath*, the programs the agent loads, the actual forwarding/enforcement layer
 - *Hubble*, observability, build on top (hubble server in the agent)
 
-The *KFStore* stores the state of identities, endpoints and policies. They live in either Kubernetes CRDs/API-Server (default is "kvstore-free", uses K8s etcd by default) or an external etcd for very large clusters
+The *KFStore* stores the state of identities, endpoints and policies. They live in either Kubernetes CRDs/API-Server (default it lives in k8s etcd) or an external etcd for very large clusters
 
 **The flow**:
 1. Pod is scheduled
