@@ -29,6 +29,8 @@ The main components:
 - *Hubble*, the Hubble server embedded in each agent, the Hubble relay (aggregates all nodes for clusterwide view) and Hubble UI/CLI
 - *Envoy proxy (L7)* An embedded proxy per node (not per pod sidecars) that the datapath transparently redirects traffic to when L7 policy/mesh features are needed
 - KVStore (etcd), optional state backend, by default the state is in the K8s API server, a dedicated etcd is only for very large clusters or Cluster Mesh
+- Client Tooling: Cilium-ClI `cilium` and `cilium-dbg` a debug command which runs in the cilium agent pod for low-level inspection.
+
 
 The *KFStore* stores the state of identities, endpoints and policies. They live in either Kubernetes CRDs/API-Server (default it lives in k8s etcd) or an external etcd for very large clusters
 
