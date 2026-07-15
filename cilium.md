@@ -50,3 +50,4 @@ The *IPAM mode* determines how pod CIDRs are carved up and allocated.
 3. *Multi Pool*: Multiple IP pools, different pods can draw from dfferent pools, e.g. by namespace or annotation
 4. *Cloud Provider*: Pods get read VPC IPs, that means pods are first-class citizens on the cloud network, often used by managed clusters. E.g. AWS ENI or Azure IPAM
 
+For *1* and *3* cilium allocates the IPs and for *2* and *4* the Kubernetes or the Cloud provider allocates the IPs. We need to make sure we use the correctly IPAM from the beginning, it is not changed easily afterwards.
