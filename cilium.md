@@ -66,7 +66,7 @@ How does a packet from a pod on one node get to the pod on another node. Two pos
 - Pod-to-Pod traffic between nodes is wrapped in a tunnel: VXLAN or Geneve
 - Underlying network sees only the node-to-node traffic
 - Pro: Simply
-- Con: encapsulation overhead, extra header (~50bytes), smaller MTU, per packet and small performance cost
+- Con: encapsulation overhead, extra header (~50bytes), smaller MTU (1500 bytes of data - 50 bytes of header), per packet and small performance cost
 
 
 **Native/Direct Routing**
