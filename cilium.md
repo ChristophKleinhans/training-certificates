@@ -57,3 +57,28 @@ The *IPAM mode* determines how pod CIDRs are carved up and allocated.
 For *1* and *3* cilium allocates the IPs and for *2* and *4* the Kubernetes or the Cloud provider allocates the IPs. We need to make sure we use the correctly IPAM from the beginning, it is not changed easily afterwards.
 
 
+## Datapath Models
+
+How does a packet from a pod on one node get to the pod on another node. Two possible modes:
+
+**Encapsulation/Tunnel (default)**
+
+- Pod-to-Pod traffic between nodes is wrapped in a tunnel: VXLAN or Geneve
+- Underlying network sees only the node-to-node traffic
+- Pro: Simply
+- Con: encapsulation overhead, extra header (~50bytes), smaller MTU, per packet and small performance cost
+
+
+**Native/Direct Routing**
+
+- No encapsulation, Packets are routed by the normal Linux/network routing statck as pain pod-IP packets
+- Requirement: the network must know how to route Pod CIDR
+- Pro: full MTU, lower overhead, better performance
+- Con: needs network supports (routing/BGP)
+
+*eBPF optimization*: Cilium can bypass the node's normal iptable/upper network stack and route in eBPF directly. Optimization for both modes
+*Cloud IPAM*: AWS and Azure the traffic is effectively native-routed by the cloud network, no overlay needed
+
+
+
+1. 
