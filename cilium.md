@@ -28,10 +28,10 @@ The main components:
 - *eBPF datapath*, the programs the agent loads, the actual forwarding/enforcement layer
 - *Hubble*, observability, build on top (hubble server in the agent)
 
-The *KFStore* stores the state of identities, endpoints and policies. They live in either Kubernetes CRDs/API-Server (default is "kvstore-free") or an external etcd for very large clusters
+The *KFStore* stores the state of identities, endpoints and policies. They live in either Kubernetes CRDs/API-Server (default is "kvstore-free", uses K8s etcd by default) or an external etcd for very large clusters
 
 **The flow**:
-1. Pos is scheduled
+1. Pod is scheduled
 2. Cilium Agent sees it via K8s API. Allocates an IP and computes endpoints identity from it's label
 3. Cilium Agent compiles resulting policy + service load-balancing rules into eBPF and loads them into the kernel on that node
 4. eBPF datapath enforces and forwardes in-kernel
