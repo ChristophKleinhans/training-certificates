@@ -9,8 +9,13 @@ Cilium is a eBPF based CNI plugin for kubernetes. It provides Networking, securi
 **What does it provide**:
 
 - Networking (connectivity) — Provides the pod network: pod-to-pod connectivity, IPAM, and service load balancing (can replace kube-proxy).
-- Security — Enforces network policies at L3/L4 and L7 (HTTP, gRPC, Kafka, DNS), using **identity-based security rather than IP-based!**.
+- Security — Enforces network policies at L3/L4 (allow/deny policies enforced in eBPF datapath) and L7 (HTTP, gRPC, Kafka, DNS), using **identity-based security rather than IP-based!**. For external endpoints outside the cluster where cilium has no identity, Cilium does fall back to CIDR/IP-based rules.
 - Observability — Via Hubble, gives visibility into network flows, service dependencies, and L7 traffic.
 
 ## Cilium Architecture
 
+<img width="1044" height="782" alt="image" src="https://github.com/user-attachments/assets/0685d751-c6af-497e-a50a-b8d4c550cda3" />
+
+The two planes:
+- **Control Plane**: *Decides* what should happen, computes identities, compiles policies, managed IPAM. It runs in userspace
+- **Data plane (datapath)**: *Does* it: eBPF programs attached to kernel hook points forward, load-balance, enforce policy
