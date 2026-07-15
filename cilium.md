@@ -14,7 +14,8 @@ Cilium is a eBPF based CNI plugin for kubernetes. It provides Networking, securi
 
 ## Cilium Architecture
 
-<img width="1044" height="782" alt="image" src="https://github.com/user-attachments/assets/0685d751-c6af-497e-a50a-b8d4c550cda3" />
+<img width="674" height="505" alt="image" src="https://github.com/user-attachments/assets/4870d7e8-c431-4359-8033-9ba1ae42f08d" />
+
 
 The two planes:
 - **Control Plane**: *Decides* what should happen, computes identities, compiles policies, managed IPAM. It runs in userspace
