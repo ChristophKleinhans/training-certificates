@@ -36,3 +36,17 @@ The *KFStore* stores the state of identities, endpoints and policies. They live 
 3. Cilium Agent compiles resulting policy + service load-balancing rules into eBPF and loads them into the kernel on that node
 4. eBPF datapath enforces and forwardes in-kernel
 
+## IP address management (IPAM)
+
+IPAM is how Cilium decides which IP address each pod gets and where those IPs come from.
+The *IPAM mode* determines how pod CIDRs are carved up and allocated.
+
+**The core job**: Every pod needs a routeable IP. IPAM mages the pool of available IPs, hands one to each new pod via the CNI plugin, and reclaims it when the pod dies.
+
+**The 4 IPAM modes**:
+
+1. *Cluster Scope (default)*: The Cilium operator assigns a PodCIDR block to each node. Uses `CiliumNode` CRDs to track allocations
+2. *Kubernetes*: Cilium defers to Kubernetes and reads the podCIDR that Kubernetes already assigns to each node. Kubernetes is the source of truth for node CIDRs
+3. *Multi Pool*: Multiple IP pools, different pods can draw from dfferent pools, e.g. by namespace or annotation
+4. *Cloud Provider*: Pods get read VPC IPs, that means pods are first-class citizens on the cloud network, often used by managed clusters. E.g. AWS ENI or Azure IPAM
+
