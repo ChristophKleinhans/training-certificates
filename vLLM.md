@@ -2,7 +2,7 @@ From deeplearning.ai [LINK](https://learn.deeplearning.ai/courses/fast-and-effic
 
 # Fast & Efficient LLM Inference with vLLM
 
-## Memory challenge
+## Memory challenge (Anja)
 
 ### General
 
